@@ -1,0 +1,76 @@
+:root {
+    --pms-navy: #1b2540;
+    --pms-navy-soft: #26325a;
+    --pms-accent: #2f6fed;
+    --pms-bg: #f3f5f9;
+    --pms-text: #1f2937;
+    --pms-muted: #6b7280;
+}
+
+body {
+    background: var(--pms-bg);
+    color: var(--pms-text);
+    font-size: 0.925rem;
+}
+
+/* ---------- layout ---------- */
+.app-shell { display: flex; min-height: 100vh; }
+.app-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.app-content { flex: 1; padding: 1.5rem; }
+.app-footer { padding: 0.9rem 1.5rem; font-size: 0.8rem; color: var(--pms-muted); border-top: 1px solid #e3e7ef; background: #fff; }
+
+/* ---------- sidebar ---------- */
+.app-sidebar {
+    --bs-offcanvas-width: 260px;
+    --bs-offcanvas-bg: var(--pms-navy);
+    --bs-offcanvas-color: #c9d1e6;
+    background: var(--pms-navy);
+    color: #c9d1e6;
+}
+@media (min-width: 992px) {
+    .app-sidebar { flex: 0 0 250px; width: 250px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+}
+.sidebar-brand { padding: 1.1rem 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.sidebar-brand .brand-name { color: #fff; font-weight: 600; font-size: 1rem; line-height: 1.2; }
+.sidebar-brand .brand-sub { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: #8e9ac0; }
+.sidebar-heading { padding: 1rem 1.25rem 0.35rem; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: #7f8bb3; }
+.sidebar-link {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.55rem 1.25rem; color: #c9d1e6; text-decoration: none;
+    border-left: 3px solid transparent;
+}
+.sidebar-link i { font-size: 1.05rem; width: 1.2rem; text-align: center; }
+.sidebar-link:hover { background: var(--pms-navy-soft); color: #fff; }
+.sidebar-link.active { background: var(--pms-navy-soft); color: #fff; border-left-color: var(--pms-accent); }
+
+/* ---------- header ---------- */
+.app-header {
+    background: #fff; border-bottom: 1px solid #e3e7ef;
+    padding: 0.7rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+}
+.app-header .page-title { font-size: 1.15rem; font-weight: 600; margin: 0; }
+.avatar-circle {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--pms-accent); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem;
+}
+
+/* ---------- cards ---------- */
+.card { border: 1px solid #e3e7ef; border-radius: 0.6rem; box-shadow: none; }
+.card-header { background: #fff; font-weight: 600; }
+.stat-card .stat-icon {
+    width: 46px; height: 46px; border-radius: 10px; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 1.35rem;
+}
+.stat-card .stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.stat-card .stat-label { color: var(--pms-muted); font-size: 0.82rem; }
+
+/* ---------- tables (used by later modules) ---------- */
+.table > :not(caption) > * > * { padding: 0.65rem 0.85rem; }
+.table thead th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--pms-muted); background: #f8f9fc; border-bottom-width: 1px; }
+.empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--pms-muted); }
+.empty-state i { font-size: 2.2rem; display: block; margin-bottom: 0.5rem; }
+
+/* ---------- guest (login) ---------- */
+.guest-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: linear-gradient(160deg, #1b2540 0%, #2a3a6e 100%); }
+.guest-card { width: 100%; max-width: 410px; border-radius: 0.8rem; border: 0; }
+.guest-card .brand-mark { width: 52px; height: 52px; border-radius: 12px; background: var(--pms-accent); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; }
