@@ -115,7 +115,7 @@
             </table>
         </div>
         @if ($employees->hasPages())
-            <div class="card-footer bg-white">{{ $employees->links() }}</div>
+            <div class="card-footer">{{ $employees->links() }}</div>
         @endif
     </div>
 @endsection

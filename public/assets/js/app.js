@@ -32,3 +32,40 @@ document.querySelectorAll('.toast').forEach(function (el) {
         if (pendingForm && pendingForm.dataset.confirmed !== '1') pendingForm = null;
     });
 })();
+
+// Colour theme and dark mode switcher (saved in this browser only).
+(function () {
+    var root = document.documentElement;
+    var swatches = document.querySelectorAll('[data-theme-choice]');
+    var darkSwitch = document.getElementById('darkModeSwitch');
+
+    function save(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+    }
+
+    function markActive() {
+        var current = root.getAttribute('data-theme') || 'blue';
+        swatches.forEach(function (btn) {
+            btn.classList.toggle('active', btn.dataset.themeChoice === current);
+        });
+        if (darkSwitch) darkSwitch.checked = root.getAttribute('data-bs-theme') === 'dark';
+    }
+
+    swatches.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            root.setAttribute('data-theme', btn.dataset.themeChoice);
+            save('pms.theme', btn.dataset.themeChoice);
+            markActive();
+        });
+    });
+
+    if (darkSwitch) {
+        darkSwitch.addEventListener('change', function () {
+            var mode = darkSwitch.checked ? 'dark' : 'light';
+            root.setAttribute('data-bs-theme', mode);
+            save('pms.mode', mode);
+        });
+    }
+
+    markActive();
+})();

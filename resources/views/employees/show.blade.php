@@ -105,7 +105,7 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="small text-muted p-3 pt-2">Showing the latest 15 records.</div>
+                            <div class="small text-muted p-3 pt-2">Showing the latest 15 records. <a href="{{ route('attendance.employee', $employee) }}">View full history</a></div>
                         </div>
                     @endif
 
@@ -159,6 +159,8 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            <div class="mb-3"><a href="{{ route('salary.employee', $employee) }}" class="btn btn-sm btn-outline-primary">Open salary page</a></div>
 
                             <h3 class="h6 text-muted text-uppercase small">Basic salary changes</h3>
                             <ul class="list-unstyled mb-0">

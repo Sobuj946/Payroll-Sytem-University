@@ -82,7 +82,7 @@
             </table>
         </div>
         @if ($departments->hasPages())
-            <div class="card-footer bg-white">{{ $departments->links() }}</div>
+            <div class="card-footer">{{ $departments->links() }}</div>
         @endif
     </div>
 @endsection

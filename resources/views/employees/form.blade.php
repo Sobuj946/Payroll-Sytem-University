@@ -74,7 +74,9 @@
             <div class="card-header">Salary and bank</div>
             <div class="card-body">
                 <div class="row g-3">
-                    <x-form-input name="basic_salary" label="Basic salary (৳)" type="number" step="0.01" min="0" :value="$employee->basic_salary" required col="4" />
+                    @php $salaryLocked = $employee->exists && ! auth()->user()->hasPermission('salary.manage'); @endphp
+                    <x-form-input name="basic_salary" label="Basic salary (৳)" type="number" step="0.01" min="0" :value="$employee->basic_salary" :required="! $salaryLocked" :disabled="$salaryLocked"
+                                  :hint="$salaryLocked ? 'Only payroll staff can change the salary.' : null" col="4" />
                     <x-form-input name="bank_name" label="Bank name" :value="$employee->bank_name" maxlength="100" col="4" />
                     <x-form-input name="bank_branch" label="Branch" :value="$employee->bank_branch" maxlength="100" col="4" />
                     <x-form-input name="bank_account_number" label="Account number" :value="$employee->bank_account_number" maxlength="20" col="4" />

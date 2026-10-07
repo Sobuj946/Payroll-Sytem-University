@@ -47,7 +47,11 @@ class EmployeeRequest extends FormRequest
             'designation_id' => ['required', 'integer', 'exists:designations,id'],
             'employment_type' => ['required', Rule::in(array_keys(Employee::EMPLOYMENT_TYPES))],
             'joining_date' => ['required', 'date', 'after:date_of_birth'],
-            'basic_salary' => ['required', 'numeric', 'min:0', 'max:99999999'],
+            // Changing an existing employee's salary needs the salary.manage permission (HR can only add a starting salary).
+            'basic_salary' => [
+                $employee && ! $this->user()?->hasPermission('salary.manage') ? 'nullable' : 'required',
+                'numeric', 'min:0', 'max:99999999',
+            ],
             'bank_name' => ['nullable', 'string', 'max:100'],
             'bank_account_number' => ['nullable', 'required_with:bank_name', 'regex:/^[0-9]{8,20}$/'],
             'bank_branch' => ['nullable', 'string', 'max:100'],

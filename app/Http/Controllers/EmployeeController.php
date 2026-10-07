@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Employee;
 use App\Services\AuditService;
+use App\Services\SalaryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
@@ -16,6 +17,10 @@ use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
 {
+    public function __construct(private SalaryService $salary)
+    {
+    }
+
     public function index(Request $request)
     {
         $employees = Employee::with('department', 'designation')
@@ -91,18 +96,7 @@ class EmployeeController extends Controller
         $salaryChanges = collect();
 
         if ($user->hasPermission('salary.view')) {
-            $structure = $employee->salaryComponents()->with('component')->whereNull('effective_to')->get()
-                ->map(function ($row) use ($employee) {
-                    $rate = $row->value ?? $row->component->default_value;
-                    $isPercent = $row->component->calc_type === 'percent';
-
-                    return [
-                        'name' => $row->component->name,
-                        'type' => $row->component->type,
-                        'basis' => $isPercent ? rtrim(rtrim(number_format($rate, 2), '0'), '.') . '% of basic' : 'Fixed',
-                        'amount' => $isPercent ? $employee->basic_salary * $rate / 100 : $rate,
-                    ];
-                });
+            $structure = $this->salary->structure($employee);
 
             $salaryChanges = AuditLog::with('user')
                 ->where('module', 'employees')->where('action', 'salary_changed')->where('record_id', $employee->id)
@@ -120,6 +114,11 @@ class EmployeeController extends Controller
     public function update(EmployeeRequest $request, Employee $employee)
     {
         $data = Arr::except($request->validated(), ['photo']);
+
+        // Salary changes go through the Salary page; here only users with salary.manage may change it.
+        if (! $request->user()->hasPermission('salary.manage')) {
+            unset($data['basic_salary']);
+        }
 
         if ($request->hasFile('photo')) {
             $this->deletePhoto($employee->photo);
