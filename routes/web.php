@@ -9,7 +9,10 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\MyLeaveController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayrollAdjustmentController;
+use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\PayrollPeriodController;
 use App\Http\Controllers\SalaryComponentController;
 use App\Http\Controllers\SalaryController;
@@ -131,6 +134,51 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('salary/adjustments', [PayrollAdjustmentController::class, 'store'])->name('salary.adjustments.store');
         Route::delete('salary/adjustments/{adjustment}', [PayrollAdjustmentController::class, 'destroy'])->name('salary.adjustments.destroy');
         Route::post('payroll/periods', [PayrollPeriodController::class, 'store'])->name('payroll.periods.store');
+    });
+
+    // ----- Phase 9: payroll -----
+    Route::middleware('permission:payroll.view')->group(function () {
+        Route::get('payroll', [PayrollController::class, 'index'])->name('payroll.index');
+        Route::get('payroll/records/{payroll}', [PayrollController::class, 'record'])->name('payroll.record');
+        Route::get('payroll/{payrollPeriod}', [PayrollController::class, 'show'])->name('payroll.show');
+    });
+    Route::post('payroll/{payrollPeriod}/process', [PayrollController::class, 'process'])
+        ->middleware('permission:payroll.process')->name('payroll.process');
+    Route::post('payroll/{payrollPeriod}/review', [PayrollController::class, 'review'])
+        ->middleware('permission:payroll.review')->name('payroll.review');
+    Route::post('payroll/{payrollPeriod}/approve', [PayrollController::class, 'approve'])
+        ->middleware('permission:payroll.approve')->name('payroll.approve');
+    Route::post('payroll/{payrollPeriod}/reopen', [PayrollController::class, 'reopen'])
+        ->middleware('permission:payroll.approve')->name('payroll.reopen');
+    Route::post('payroll/{payrollPeriod}/close', [PayrollController::class, 'close'])
+        ->middleware('permission:payroll.close')->name('payroll.close');
+
+    // ----- Phase 10: payments -----
+    Route::get('payments', [PaymentController::class, 'index'])
+        ->middleware('permission:payments.view')->name('payments.index');
+    Route::middleware('permission:payments.manage')->group(function () {
+        Route::post('payments/generate/{payrollPeriod}', [PaymentController::class, 'generate'])->name('payments.generate');
+        Route::post('payments/bulk-pay', [PaymentController::class, 'payMany'])->name('payments.bulk');
+        Route::post('payments/{payment}/pay', [PaymentController::class, 'pay'])->name('payments.pay');
+        Route::post('payments/{payment}/fail', [PaymentController::class, 'fail'])->name('payments.fail');
+        Route::post('payments/{payment}/cancel', [PaymentController::class, 'cancel'])->name('payments.cancel');
+    });
+
+    // ----- Phase 11: salary slips -----
+    Route::middleware('permission:payslips.view')->group(function () {
+        Route::get('payslips', [PayslipController::class, 'index'])->name('payslips.index');
+        Route::get('payslips/{payroll}', [PayslipController::class, 'show'])->name('payslips.show');
+    });
+    Route::middleware('permission:payslips.generate')->group(function () {
+        Route::get('payslips/period/{payrollPeriod}/pdf', [PayslipController::class, 'periodPdf'])->name('payslips.period.pdf');
+        Route::get('payslips/{payroll}/pdf', [PayslipController::class, 'pdf'])->name('payslips.pdf');
+    });
+
+    // The signed-in employee's own slips
+    Route::middleware('permission:self.access')->group(function () {
+        Route::get('my/payslips', [PayslipController::class, 'mine'])->name('my.payslips');
+        Route::get('my/payslips/{payroll}', [PayslipController::class, 'mineShow'])->name('my.payslips.show');
+        Route::get('my/payslips/{payroll}/pdf', [PayslipController::class, 'minePdf'])->name('my.payslips.pdf');
     });
 
     // Later phases add their routes here, each with ->middleware('permission:...')

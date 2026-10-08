@@ -34,7 +34,7 @@ class PayrollAdjustmentController extends Controller
                 ? Employee::where('status', 'active')->whereDate('joining_date', '<=', $period->end_date->toDateString())->orderBy('employee_code')->get()
                 : collect(),
             'components' => SalaryComponent::active()->where('source', 'adjustment')->orderBy('type')->orderBy('name')->get(),
-            'canEdit' => $period && $period->status === 'draft' && auth()->user()->hasPermission('payroll.process'),
+            'canEdit' => $period && in_array($period->status, ['draft', 'processed'], true) && auth()->user()->hasPermission('payroll.process'),
         ]);
     }
 
@@ -56,7 +56,7 @@ class PayrollAdjustmentController extends Controller
         ]);
 
         $period = PayrollPeriod::findOrFail($data['payroll_period_id']);
-        $this->ensureDraft($period);
+        $this->ensureEditable($period);
 
         $employee = Employee::findOrFail($data['employee_id']);
 
@@ -80,7 +80,7 @@ class PayrollAdjustmentController extends Controller
     public function destroy(PayrollAdjustment $adjustment)
     {
         $adjustment->load('period', 'employee', 'component');
-        $this->ensureDraft($adjustment->period);
+        $this->ensureEditable($adjustment->period);
 
         $adjustment->delete();
 
@@ -93,9 +93,10 @@ class PayrollAdjustmentController extends Controller
         return back()->with('success', 'The item has been removed.');
     }
 
-    private function ensureDraft(PayrollPeriod $period): void
+    /** Items can change while payroll is Draft, or Processed (then process it again). Reviewed payroll is locked. */
+    private function ensureEditable(PayrollPeriod $period): void
     {
-        if ($period->status !== 'draft') {
+        if (! in_array($period->status, ['draft', 'processed'], true)) {
             throw new BusinessRuleException("Payroll for {$period->label} is already {$period->status}, so items can no longer be changed.");
         }
     }

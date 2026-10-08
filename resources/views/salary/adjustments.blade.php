@@ -50,6 +50,9 @@
     @else
         <div class="row g-3">
             <div class="{{ $canEdit ? 'col-xl-8' : 'col-12' }}">
+                @if ($period->status === 'processed' && $canEdit)
+                    <div class="alert alert-warning py-2"><i class="bi bi-exclamation-triangle me-1"></i>Payroll for this month is already processed. After changing items, process it again from the <a href="{{ route('payroll.show', $period) }}">payroll page</a>.</div>
+                @endif
                 <div class="card">
                     <div class="card-header">Items for {{ $period->label }}</div>
                     <div class="table-responsive">
@@ -84,7 +87,7 @@
                     </div>
                     @if (! $canEdit)
                         <div class="card-footer small text-muted">
-                            @if ($period->status !== 'draft') Payroll for this month is {{ $period->status }}, so items are locked.
+                            @if (! in_array($period->status, ['draft', 'processed'])) Payroll for this month is {{ $period->status }}, so items are locked.
                             @else You can view these items but not change them. @endif
                         </div>
                     @endif

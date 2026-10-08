@@ -7,7 +7,7 @@ use App\Services\AuditService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-/** Payroll periods. Phase 9 adds the list, processing and approval workflow to this controller. */
+/** Creates payroll periods. Listing, processing and approval are in PayrollController. */
 class PayrollPeriodController extends Controller
 {
     public function store(Request $request)
@@ -41,7 +41,7 @@ class PayrollPeriodController extends Controller
             AuditService::log('period_created', 'payroll', "Payroll period {$period->label} was created", $period->id);
         }
 
-        return redirect()->route('salary.adjustments.index', ['month' => $start->format('Y-m')])
+        return redirect()->route('payroll.show', $period)
             ->with('success', $period->wasRecentlyCreated ? "Payroll period {$period->label} has been created." : "Payroll period {$period->label} already exists.");
     }
 }
