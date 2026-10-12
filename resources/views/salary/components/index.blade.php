@@ -22,32 +22,32 @@
                     <tr><th>Component</th><th>Code</th><th>Type</th><th>How it is used</th><th class="text-end">Default</th><th>Taxable</th><th>Status</th>@can('salary.manage')<th class="text-end">Actions</th>@endcan</tr>
                 </thead>
                 <tbody>
-                    @foreach ($components as $component)
+                    @foreach ($components as $item)
                         <tr>
                             <td class="fw-semibold">
-                                {{ $component->name }}
-                                @if ($component->source === 'system') <i class="bi bi-lock-fill text-muted ms-1" title="Calculated by the payroll engine"></i> @endif
+                                {{ $item->name }}
+                                @if ($item->source === 'system') <i class="bi bi-lock-fill text-muted ms-1" title="Calculated by the payroll engine"></i> @endif
                             </td>
-                            <td><code>{{ $component->code }}</code></td>
-                            <td><span class="badge text-bg-{{ $component->type === 'earning' ? 'success' : 'danger' }}">{{ ucfirst($component->type) }}</span></td>
-                            <td class="text-muted">{{ $sourceLabels[$component->source] ?? $component->source }}</td>
+                            <td><code>{{ $item->code }}</code></td>
+                            <td><span class="badge text-bg-{{ $item->type === 'earning' ? 'success' : 'danger' }}">{{ ucfirst($item->type) }}</span></td>
+                            <td class="text-muted">{{ $sourceLabels[$item->source] ?? $item->source }}</td>
                             <td class="text-end">
-                                @if ($component->source === 'system') —
-                                @elseif ($component->calc_type === 'percent') {{ $component->default_value + 0 }}% of basic
-                                @else ৳{{ number_format($component->default_value, 2) }} @endif
+                                @if ($item->source === 'system') —
+                                @elseif ($item->calc_type === 'percent') {{ $item->default_value + 0 }}% of basic
+                                @else ৳{{ number_format($item->default_value, 2) }} @endif
                             </td>
-                            <td>{{ $component->is_taxable ? 'Yes' : 'No' }}</td>
-                            <td><x-status-badge :status="$component->status" /></td>
+                            <td>{{ $item->is_taxable ? 'Yes' : 'No' }}</td>
+                            <td><x-status-badge :status="$item->status" /></td>
                             @can('salary.manage')
                                 <td class="text-end text-nowrap">
-                                    @if ($component->source !== 'system')
-                                        <a href="{{ route('salary.components.edit', $component) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                        <form method="POST" action="{{ route('salary.components.status', $component) }}" class="d-inline"
-                                              data-confirm="{{ $component->status === 'active' ? 'Deactivate' : 'Activate' }} {{ $component->name }}?">
+                                    @if ($item->source !== 'system')
+                                        <a href="{{ route('salary.components.edit', $item) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <form method="POST" action="{{ route('salary.components.status', $item) }}" class="d-inline"
+                                              data-confirm="{{ $item->status === 'active' ? 'Deactivate' : 'Activate' }} {{ $item->name }}?">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="btn btn-sm btn-outline-{{ $component->status === 'active' ? 'warning' : 'success' }}">
-                                                {{ $component->status === 'active' ? 'Deactivate' : 'Activate' }}
+                                            <button type="submit" class="btn btn-sm btn-outline-{{ $item->status === 'active' ? 'warning' : 'success' }}">
+                                                {{ $item->status === 'active' ? 'Deactivate' : 'Activate' }}
                                             </button>
                                         </form>
                                     @endif

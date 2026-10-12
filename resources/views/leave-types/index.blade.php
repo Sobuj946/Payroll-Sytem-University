@@ -20,7 +20,7 @@
                         <tr>
                             <td class="fw-semibold">{{ $type->name }}</td>
                             <td class="text-center">{{ $type->days_per_year > 0 ? $type->days_per_year : 'No limit' }}</td>
-                            <td>{!! $type->is_paid ? '<span class="badge text-bg-success">Paid</span>' : '<span class="badge text-bg-secondary">Unpaid</span>' !!}</td>
+                            <td>@if ($type->is_paid)<span class="badge text-bg-success">Paid</span>@else<span class="badge text-bg-secondary">Unpaid</span>@endif</td>
                             <td class="text-center">{{ $type->requests_count }}</td>
                             <td><x-status-badge :status="$type->status" /></td>
                             <td class="text-end text-nowrap">

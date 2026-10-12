@@ -1,0 +1,10 @@
+# Uploaded photos and logos are pictures only. Never run scripts from here and never list the folder.
+Options -Indexes
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<FilesMatch "\.(php|phtml|phar|php[0-9])$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>

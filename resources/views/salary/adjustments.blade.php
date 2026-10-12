@@ -116,8 +116,8 @@
                                     <label for="salary_component_id" class="form-label">Item</label>
                                     <select id="salary_component_id" name="salary_component_id" class="form-select" required>
                                         <option value="">Select...</option>
-                                        @foreach ($components as $component)
-                                            <option value="{{ $component->id }}" @selected((string) old('salary_component_id') === (string) $component->id)>{{ $component->name }} ({{ $component->type === 'earning' ? 'added' : 'deducted' }})</option>
+                                        @foreach ($components as $item)
+                                            <option value="{{ $item->id }}" @selected((string) old('salary_component_id') === (string) $item->id)>{{ $item->name }} ({{ $item->type === 'earning' ? 'added' : 'deducted' }})</option>
                                         @endforeach
                                     </select>
                                 </div>

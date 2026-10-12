@@ -27,8 +27,10 @@
         ],
         'Administration' => [
             ['Users', 'bi-person-gear', 'users.index', ['users.manage'], 'users.*'],
+            ['Roles & Permissions', 'bi-shield-lock', 'roles.index', ['users.manage'], 'roles.*'],
             ['Audit Logs', 'bi-journal-text', 'audit.index', ['audit.view'], 'audit.*'],
             ['Settings', 'bi-gear', 'settings.index', ['settings.manage'], 'settings.*'],
+            ['Backup & Export', 'bi-database-down', 'backup.index', ['backup.manage'], 'backup.*'],
         ],
         'My Account' => [
             ['My Profile', 'bi-person-badge', 'my.profile', ['self.access'], 'my.profile'],

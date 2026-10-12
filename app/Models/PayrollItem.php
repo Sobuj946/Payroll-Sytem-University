@@ -18,4 +18,9 @@ class PayrollItem extends Model
     {
         return $this->belongsTo(Payroll::class);
     }
+
+    public function component(): BelongsTo
+    {
+        return $this->belongsTo(SalaryComponent::class, 'salary_component_id');
+    }
 }

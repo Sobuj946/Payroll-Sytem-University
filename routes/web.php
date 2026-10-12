@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
@@ -13,6 +15,10 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayrollAdjustmentController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\PayslipController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\PayrollPeriodController;
 use App\Http\Controllers\SalaryComponentController;
 use App\Http\Controllers\SalaryController;
@@ -25,7 +31,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/account/password', [AccountController::class, 'editPassword'])->name('account.password');
-    Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+    Route::put('/account/password', [AccountController::class, 'updatePassword'])->middleware('throttle:6,1')->name('account.password.update');
 
     // ----- Phase 5: organization -----
     Route::middleware('permission:departments.view')->group(function () {
@@ -179,6 +185,49 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('my/payslips', [PayslipController::class, 'mine'])->name('my.payslips');
         Route::get('my/payslips/{payroll}', [PayslipController::class, 'mineShow'])->name('my.payslips.show');
         Route::get('my/payslips/{payroll}/pdf', [PayslipController::class, 'minePdf'])->name('my.payslips.pdf');
+    });
+
+    // ----- Phase 12: reports -----
+    // Each report also checks its own permission (employee, attendance, leave or payroll reports).
+    Route::middleware('permission:reports.employee,reports.attendance,reports.leave,reports.payroll')->group(function () {
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/{key}/pdf', [ReportController::class, 'pdf'])->where('key', '[a-z.]+')->middleware('throttle:30,1')->name('reports.pdf');
+        Route::get('reports/{key}/csv', [ReportController::class, 'csv'])->where('key', '[a-z.]+')->middleware('throttle:30,1')->name('reports.csv');
+        Route::get('reports/{key}', [ReportController::class, 'show'])->where('key', '[a-z.]+')->name('reports.show');
+    });
+
+    // ----- Phase 13: administration -----
+    Route::middleware('permission:users.manage')->group(function () {
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::patch('users/{user}/status', [UserController::class, 'toggleStatus'])->name('users.status');
+        Route::post('users/{user}/password', [UserController::class, 'resetPassword'])->middleware('throttle:10,1')->name('users.password');
+
+        Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+        Route::post('roles', [RoleController::class, 'update'])->name('roles.update');
+    });
+
+    Route::get('audit-logs', [AuditLogController::class, 'index'])
+        ->middleware('permission:audit.view')->name('audit.index');
+
+    Route::middleware('permission:settings.manage')->group(function () {
+        Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::post('settings/company', [SettingsController::class, 'updateCompany'])->name('settings.company');
+        Route::delete('settings/logo', [SettingsController::class, 'removeLogo'])->name('settings.logo.remove');
+        Route::post('settings/attendance', [SettingsController::class, 'updateAttendance'])->name('settings.attendance');
+        Route::post('settings/payroll', [SettingsController::class, 'updatePayroll'])->name('settings.payroll');
+        Route::post('settings/holidays', [SettingsController::class, 'storeHoliday'])->name('settings.holidays.store');
+        Route::delete('settings/holidays/{holiday}', [SettingsController::class, 'destroyHoliday'])->name('settings.holidays.destroy');
+        Route::post('settings/tax-slabs', [SettingsController::class, 'storeSlab'])->name('settings.slabs.store');
+        Route::delete('settings/tax-slabs/{taxSlab}', [SettingsController::class, 'destroySlab'])->name('settings.slabs.destroy');
+    });
+
+    Route::middleware('permission:backup.manage')->group(function () {
+        Route::get('backup', [BackupController::class, 'index'])->name('backup.index');
+        Route::post('backup/download', [BackupController::class, 'download'])->middleware('throttle:3,1')->name('backup.download');
     });
 
     // Later phases add their routes here, each with ->middleware('permission:...')

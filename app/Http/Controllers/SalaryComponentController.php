@@ -21,7 +21,7 @@ class SalaryComponentController extends Controller
     public function create()
     {
         return view('salary.components.form', [
-            'component' => new SalaryComponent(['type' => 'earning', 'calc_type' => 'fixed', 'source' => 'structure', 'default_value' => 0, 'is_taxable' => true, 'status' => 'active']),
+            'salaryComponent' => new SalaryComponent(['type' => 'earning', 'calc_type' => 'fixed', 'source' => 'structure', 'default_value' => 0, 'is_taxable' => true, 'status' => 'active']),
         ]);
     }
 
@@ -46,7 +46,7 @@ class SalaryComponentController extends Controller
     {
         $this->ensureEditable($component);
 
-        return view('salary.components.form', compact('component'));
+        return view('salary.components.form', ['salaryComponent' => $component]);
     }
 
     public function update(Request $request, SalaryComponent $component)

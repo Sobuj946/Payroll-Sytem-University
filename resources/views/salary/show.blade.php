@@ -142,8 +142,8 @@
                                     <label for="salary_component_id" class="form-label">Component</label>
                                     <select id="salary_component_id" name="salary_component_id" class="form-select" required>
                                         <option value="">Select...</option>
-                                        @foreach ($assignable as $component)
-                                            <option value="{{ $component->id }}">{{ $component->name }} ({{ $component->type }}, {{ $component->calc_type === 'percent' ? ($component->default_value + 0) . '%' : '৳' . number_format($component->default_value, 0) }})</option>
+                                        @foreach ($assignable as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }} ({{ $item->type }}, {{ $item->calc_type === 'percent' ? ($item->default_value + 0) . '%' : '৳' . number_format($item->default_value, 0) }})</option>
                                         @endforeach
                                     </select>
                                 </div>
