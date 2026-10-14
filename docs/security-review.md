@@ -40,7 +40,7 @@ Phase 14 of the project. This document records what was checked, what was found 
 | Privacy | Bank account numbers are masked on slips and reports; employees see only their own slips | `PayslipService`, `ReportService` |
 | Audit | Sign-in, sign-out, failed sign-in, every create/update, salary and permission changes, approvals, payments, exports and backups are logged with user, time and address. The application has no screen or route that edits or deletes a log entry | `AuditService`, `AuditLogController` |
 | Errors | Friendly 403, 404, 419, 429, 500 and 503 pages; business-rule errors show a plain message; technical errors go to `storage/logs` | `resources/views/errors`, `BusinessRuleException` |
-| Browser | Headers against framing and file-type guessing; signed-in pages are not cached | `SecurityHeaders` |
+| Browser | Headers against framing and file-type guessing; signed-in pages are not cached; content security policy (scripts only from this site, no inline scripts, forms post only to this site) | `SecurityHeaders`, no inline scripts in any view |
 | Rate limits | Password change, administrator password reset, backup and exports are throttled | `routes/web.php` |
 
 ## 3. Findings
@@ -57,12 +57,13 @@ Phase 14 of the project. This document records what was checked, what was found 
 | 8 | Low | On an Apache server a script placed in the upload folder could be run | **Fixed.** `.htaccess` in `public/uploads` (also needed for the folder to not list its files) |
 | 9 | Info | One view printed HTML unescaped (constant text only, no user data) | **Fixed.** Replaced with normal Blade |
 | 10 | Info | No pages for HTTP 429 and 503 | **Fixed.** Added |
+| 10b | Low | No content security policy, because pages used a CDN and inline scripts | **Fixed in phase 16.** Assets installed locally, every inline script and handler moved to `app.js`, policy sent |
 | 11 | Configuration | With `APP_DEBUG=true` Laravel shows technical details to the user | **Check added:** `php artisan pms:security-check` reports it |
 | 12 | Configuration | The demo accounts share one known password | **Check added:** the same command lists accounts that still use it |
 
 ## 4. Accepted risks and limits
 
-- **No Content-Security-Policy yet.** The pages load Bootstrap from a CDN and use a few inline scripts. A strict policy would break them. The assets are copied into the project in the packaging phase (phase 16); after that a policy can be added.
+- **The content security policy needs the local asset files.** It is sent only when Bootstrap is installed in the project (`php artisan pms:install-assets`) and debug mode is off. Before that the pages use a CDN and no policy is sent. Styles still allow inline `style="..."` attributes (progress bars and widths); scripts do not allow anything inline. *(Changed in phase 16; this was an open item before.)*
 - **The audit log is protected by the application only.** For stronger protection on a real server, give the database user used by the application only `INSERT` and `SELECT` rights on `audit_logs`.
 - **Backups hold everything**, including bank details and password hashes. Only the Administrator can download one, each download is logged, and the page warns about storage.
 - **Session storage** is the database. Setting `SESSION_ENCRYPT=true` and a short `SESSION_LIFETIME` is recommended (the check command says so).

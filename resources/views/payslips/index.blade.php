@@ -17,7 +17,7 @@
                 <form method="GET" action="{{ route('payslips.index') }}" class="row g-2 align-items-end">
                     <div class="col-md-4">
                         <label for="period" class="form-label small text-muted mb-1">Payroll month</label>
-                        <select id="period" name="period" class="form-select" onchange="this.form.submit()">
+                        <select id="period" name="period" class="form-select" data-auto-submit>
                             @foreach ($periods as $item)
                                 <option value="{{ $item->id }}" @selected($item->id === $period->id)>{{ $item->label }} ({{ ucfirst($item->status) }})</option>
                             @endforeach

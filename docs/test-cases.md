@@ -247,3 +247,19 @@ Until the tests have been run, those two columns say *Not run yet*.
 | TC-UNT-017 | Only known statuses and employment types are accepted | The service is called directly with the seeded settings | Status "hacked", type "volunteer"; then resigned and contract | First two ignored; valid ones kept | Not run yet | Not run |
 | TC-UNT-018 | Every report in the catalogue has a permission, a group and a title | The service is called directly with the seeded settings | Every report definition | Has title, group, permission, filters and description | Not run yet | Not run |
 | TC-UNT-019 | A view that uses an <x-...> tag must not have its own variable called $component | The view files of the project | Scan every Blade file | No view combines the <x-...> tags with a variable named $component | Not run yet | Not run |
+| TC-UNT-020 | No view contains an inline script, an inline event handler or a javascript: link | The view files of the project | Scan every Blade file | None is found (the content security policy forbids them) | Not run yet | Not run |
+
+## Desktop packaging
+
+| ID | Scenario | Preconditions | Input | Expected Result | Actual Result | Status |
+|---|---|---|---|---|---|---|
+| TC-PKG-001 | First-time install creates the administrator, the basic data and the company name | Empty database, tables not yet filled | pms:install with name, email, strong password and organization name | Administrator created with the admin role and Active status; company name saved; roles loaded | Not run yet | Not run |
+| TC-PKG-002 | Install refuses to run on a system that already has users | System already installed | Run pms:install a second time with another email | Refused (exit code 1); the second user is not created | Not run yet | Not run |
+| TC-PKG-003 | A weak password or a bad email stops the install and nothing is created | Empty database | Password "short"; then email "not-an-email" | Both runs refused; no user exists | Not run yet | Not run |
+| TC-PKG-004 | With local assets and debug off, a strict content security policy is sent | Asset files installed; APP_DEBUG=false | Open /login | Policy has script-src 'self' (no inline), object-src 'none', frame-ancestors 'self', form-action 'self' | Not run yet | Not run |
+| TC-PKG-005 | Pages load Bootstrap from the project's own files | Asset files installed | Open /login | Page links assets/vendor/... and nothing from cdn.jsdelivr.net | Not run yet | Not run |
+| TC-PKG-006 | Without local files the pages use the CDN and no policy is sent | Asset files not installed; APP_DEBUG=false | Open /login | CDN links present; no Content-Security-Policy header (skipped if the files are installed) | Not run yet | Not run |
+| TC-PKG-007 | In debug mode no policy is sent | Asset files installed; APP_DEBUG=true | Open /login | No Content-Security-Policy header | Not run yet | Not run |
+| TC-PKG-008 | The asset command downloads every file into the chosen folder | Download server simulated | pms:install-assets --path=<temporary folder> | The five Bootstrap and icon files exist in the folder | Not run yet | Not run |
+| TC-PKG-009 | A failed download is refused and nothing is saved | Download server answers with an HTML error page | pms:install-assets --path=<temporary folder> | Refused (exit code 1); no file written | Not run yet | Not run |
+| TC-PKG-010 | The launchers, the icon and the production settings template are part of the project | Project files | Check the files | Windows and Linux launchers, icons, desktop README and .env.desktop.example (production, debug off, encrypted sessions) exist | Not run yet | Not run |

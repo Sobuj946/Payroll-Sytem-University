@@ -21,7 +21,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 no-print">
         <a href="{{ $backUrl }}" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i>Back</a>
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+            <button type="button" class="btn btn-outline-secondary" data-print><i class="bi bi-printer me-1"></i>Print</button>
             @if ($canPdf)
                 <a href="{{ $pdfUrl }}" class="btn btn-primary"><i class="bi bi-file-earmark-pdf me-1"></i>Download PDF</a>
             @endif

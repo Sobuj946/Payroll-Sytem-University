@@ -142,14 +142,3 @@
     </div>
 @endsection
 
-@push('scripts')
-    <script>
-        document.querySelectorAll('[data-reject-url]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                document.getElementById('rejectForm').action = button.dataset.rejectUrl;
-                document.getElementById('rejectWho').textContent = button.dataset.rejectWho;
-                document.getElementById('remarks').value = '';
-            });
-        });
-    </script>
-@endpush

@@ -45,7 +45,7 @@
             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span>{{ $date->format('l, d F Y') }} <span class="text-muted fw-normal">&middot; {{ $employees->count() }} employees</span></span>
                 @if ($canEdit && $employees->isNotEmpty())
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="markAllPresent">Mark everyone present</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="markAllPresent" data-mark-all-present>Mark everyone present</button>
                 @endif
             </div>
 
@@ -124,13 +124,3 @@
     </form>
 @endsection
 
-@push('scripts')
-    <script>
-        var markAll = document.getElementById('markAllPresent');
-        if (markAll) {
-            markAll.addEventListener('click', function () {
-                document.querySelectorAll('.att-status').forEach(function (select) { select.value = 'present'; });
-            });
-        }
-    </script>
-@endpush

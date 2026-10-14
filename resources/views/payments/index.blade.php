@@ -25,7 +25,7 @@
                 <form method="GET" action="{{ route('payments.index') }}" class="row g-2 align-items-end">
                     <div class="col-md-4">
                         <label for="period" class="form-label small text-muted mb-1">Payroll month</label>
-                        <select id="period" name="period" class="form-select" onchange="this.form.submit()">
+                        <select id="period" name="period" class="form-select" data-auto-submit>
                             @foreach ($periods as $item)
                                 <option value="{{ $item->id }}" @selected($item->id === $period->id)>{{ $item->label }} ({{ ucfirst($item->status) }})</option>
                             @endforeach
@@ -33,7 +33,7 @@
                     </div>
                     <div class="col-md-3">
                         <label for="status" class="form-label small text-muted mb-1">Payment status</label>
-                        <select id="status" name="status" class="form-select" onchange="this.form.submit()">
+                        <select id="status" name="status" class="form-select" data-auto-submit>
                             <option value="">All</option>
                             @foreach (['pending', 'paid', 'failed', 'cancelled'] as $status)
                                 <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
@@ -102,7 +102,7 @@
                     <thead>
                         <tr>
                             @if ($period->status === 'approved' && $canManage)
-                                <th style="width: 36px;"><input type="checkbox" class="form-check-input" id="tickAll" aria-label="Tick all unpaid"></th>
+                                <th style="width: 36px;"><input type="checkbox" class="form-check-input" id="tickAll" data-tick-all aria-label="Tick all unpaid"></th>
                             @endif
                             <th>Employee</th>
                             <th>Method</th>
@@ -208,13 +208,3 @@
     @endif
 @endsection
 
-@push('scripts')
-    <script>
-        var tickAll = document.getElementById('tickAll');
-        if (tickAll) {
-            tickAll.addEventListener('change', function () {
-                document.querySelectorAll('.tick-row').forEach(function (box) { box.checked = tickAll.checked; });
-            });
-        }
-    </script>
-@endpush

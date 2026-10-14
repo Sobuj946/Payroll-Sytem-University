@@ -69,3 +69,45 @@ document.querySelectorAll('.toast').forEach(function (el) {
 
     markActive();
 })();
+
+// ---- Behaviour that used to be written inline in pages (a strict content security policy forbids inline scripts) ----
+
+// A select with data-auto-submit sends its form as soon as the choice changes.
+document.addEventListener('change', function (event) {
+    var el = event.target;
+    if (el.matches && el.matches('select[data-auto-submit]') && el.form) el.form.submit();
+});
+
+document.addEventListener('click', function (event) {
+    // Print button
+    if (event.target.closest('[data-print]')) {
+        window.print();
+        return;
+    }
+
+    // Attendance sheet: "Mark everyone present"
+    if (event.target.closest('[data-mark-all-present]')) {
+        document.querySelectorAll('.att-status').forEach(function (select) { select.value = 'present'; });
+        return;
+    }
+
+    // Leave requests: the reject dialog is shared by every row
+    var reject = event.target.closest('[data-reject-url]');
+    if (reject) {
+        var form = document.getElementById('rejectForm');
+        if (form) {
+            form.action = reject.dataset.rejectUrl;
+            document.getElementById('rejectWho').textContent = reject.dataset.rejectWho;
+            document.getElementById('remarks').value = '';
+        }
+    }
+});
+
+// Payments: the box in the table heading ticks every unpaid row
+document.addEventListener('change', function (event) {
+    var box = event.target;
+    if (box.matches && box.matches('[data-tick-all]')) {
+        document.querySelectorAll('.tick-row').forEach(function (row) { row.checked = box.checked; });
+    }
+});
+

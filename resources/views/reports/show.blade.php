@@ -22,7 +22,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 no-print">
         <a href="{{ route('reports.index') }}" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i>All reports</a>
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+            <button type="button" class="btn btn-outline-secondary" data-print><i class="bi bi-printer me-1"></i>Print</button>
             <a href="{{ route('reports.pdf', ['key' => $key] + $query) }}" class="btn btn-outline-primary"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
             <a href="{{ route('reports.csv', ['key' => $key] + $query) }}" class="btn btn-outline-success"><i class="bi bi-filetype-csv me-1"></i>CSV / Excel</a>
         </div>
