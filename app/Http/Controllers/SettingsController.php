@@ -24,6 +24,9 @@ class SettingsController extends Controller
             'tab' => in_array($request->query('tab'), ['company', 'attendance', 'payroll', 'holidays', 'tax'], true) ? $request->query('tab') : 'company',
             's' => [
                 'company_name' => Setting::get('company_name', ''),
+                'company_short_name' => Setting::get('company_short_name', ''),
+                'system_title' => Setting::get('system_title', ''),
+                'employee_code_prefix' => Setting::get('employee_code_prefix', 'EMP'),
                 'company_address' => Setting::get('company_address', ''),
                 'company_phone' => Setting::get('company_phone', ''),
                 'company_email' => Setting::get('company_email', ''),
@@ -46,12 +49,16 @@ class SettingsController extends Controller
     {
         $data = $request->validate([
             'company_name' => ['required', 'string', 'max:120'],
+            'company_short_name' => ['nullable', 'string', 'max:20'],
+            'system_title' => ['nullable', 'string', 'max:80'],
+            'employee_code_prefix' => ['nullable', 'regex:/^[A-Z0-9]{2,10}$/'],
             'company_address' => ['nullable', 'string', 'max:255'],
             'company_phone' => ['nullable', 'string', 'max:40'],
             'company_email' => ['nullable', 'email', 'max:120'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         ], [
             'company_name.required' => 'Please enter the organization name.',
+            'employee_code_prefix.regex' => 'The prefix must be 2 to 10 capital letters or digits, for example HSTU.',
             'company_email.email' => 'Please enter a valid email address.',
             'logo.image' => 'The logo must be an image file.',
             'logo.mimes' => 'The logo must be a PNG or JPG file.',
@@ -65,7 +72,7 @@ class SettingsController extends Controller
             Setting::put('company_logo', $name);
         }
 
-        $this->save(Arr::only($data, ['company_name', 'company_address', 'company_phone', 'company_email']), 'company');
+        $this->save(Arr::only($data, ['company_name', 'company_short_name', 'system_title', 'employee_code_prefix', 'company_address', 'company_phone', 'company_email']), 'company');
 
         return $this->back('company', 'The company details have been saved.');
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Department;
+use App\Models\Faculty;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,19 +12,20 @@ class DepartmentController extends Controller
 {
     public function index(Request $request)
     {
-        $departments = Department::withCount('employees')
+        $departments = Department::with('faculty')->withCount('employees')
             ->when($request->filled('q'), fn ($query) => $query->where('name', 'like', '%' . trim($request->q) . '%'))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
+            ->when($request->filled('faculty_id'), fn ($query) => $query->where('faculty_id', $request->faculty_id))
             ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
 
-        return view('departments.index', compact('departments'));
+        return view('departments.index', ['departments' => $departments, 'faculties' => Faculty::orderBy('name')->get(['id', 'name'])]);
     }
 
     public function create()
     {
-        return view('departments.form', ['department' => new Department(['status' => 'active'])]);
+        return view('departments.form', $this->formData(new Department(['status' => 'active', 'type' => 'academic'])));
     }
 
     public function store(Request $request)
@@ -45,7 +47,7 @@ class DepartmentController extends Controller
 
     public function edit(Department $department)
     {
-        return view('departments.form', compact('department'));
+        return view('departments.form', $this->formData($department));
     }
 
     public function update(Request $request, Department $department)
@@ -83,14 +85,26 @@ class DepartmentController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:100', Rule::unique('departments', 'name')->ignore($department?->id)],
+            'faculty_id' => ['nullable', 'integer', 'exists:faculties,id'],
+            'type' => ['required', Rule::in(array_keys(Department::TYPES))],
             'description' => ['nullable', 'string', 'max:500'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ], [
+            'type.required' => 'Please choose whether this is an academic department or an administrative office.',
             'name.required' => 'Please enter the department name.',
             'name.unique' => 'A department with this name already exists.',
             'name.max' => 'The department name may not be longer than 100 characters.',
             'description.max' => 'The description may not be longer than 500 characters.',
             'status.required' => 'Please choose a status.',
         ]);
+    }
+
+    private function formData(Department $department): array
+    {
+        return [
+            'department' => $department,
+            // Only active faculties, plus the one this department already belongs to.
+            'faculties' => Faculty::where('status', 'active')->orWhere('id', $department->faculty_id)->orderBy('name')->pluck('name', 'id'),
+        ];
     }
 }

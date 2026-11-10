@@ -86,6 +86,10 @@ class SalaryController extends Controller
         $old = (float) $employee->basic_salary;
         $new = (float) $data['basic_salary'];
 
+        if ($employee->payGrade && ! $employee->payGrade->allows($new)) {
+            throw new BusinessRuleException('৳' . number_format($new, 2) . " is outside the scale of {$employee->payGrade->label}. Change the employee's pay grade first, or choose an amount inside the scale.");
+        }
+
         if (round($old, 2) === round($new, 2)) {
             throw new BusinessRuleException('The new basic salary is the same as the current one.');
         }

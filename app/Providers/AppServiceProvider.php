@@ -31,17 +31,22 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasPermission($ability) ? true : null;
         });
 
-        // Company name for page titles. Error pages must never fail because of the database.
-        $companyName = null;
-        View::composer(['layouts.*', 'partials.*', 'auth.*', 'errors.*', 'account.*'], function ($view) use (&$companyName) {
-            if ($companyName === null) {
+        // Names for page titles, the sidebar and the login page. Error pages must never fail because of the database.
+        $branding = null;
+        View::composer(['layouts.*', 'partials.*', 'auth.*', 'errors.*', 'account.*'], function ($view) use (&$branding) {
+            if ($branding === null) {
                 try {
-                    $companyName = Setting::get('company_name', config('app.name'));
+                    $name = Setting::get('company_name', config('app.name'));
+                    $branding = [
+                        'companyName' => $name,
+                        'companyShort' => Setting::get('company_short_name') ?: $name,
+                        'systemTitle' => Setting::get('system_title') ?: 'Payroll Management System',
+                    ];
                 } catch (Throwable) {
-                    $companyName = config('app.name');
+                    $branding = ['companyName' => config('app.name'), 'companyShort' => config('app.name'), 'systemTitle' => 'Payroll Management System'];
                 }
             }
-            $view->with('companyName', $companyName);
+            $view->with($branding);
         });
     }
 }

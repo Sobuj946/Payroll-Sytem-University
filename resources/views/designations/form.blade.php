@@ -19,6 +19,16 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                            <select id="category" name="category" class="form-select @error('category') is-invalid @enderror" required>
+                                @foreach (\App\Models\Designation::CATEGORIES as $key => $label)
+                                    <option value="{{ $key }}" @selected(old('category', $designation->category) === $key)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('category') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <textarea id="description" name="description" rows="3" maxlength="500"
                                       class="form-control @error('description') is-invalid @enderror">{{ old('description', $designation->description) }}</textarea>

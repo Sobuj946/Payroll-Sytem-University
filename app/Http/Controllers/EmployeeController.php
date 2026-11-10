@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Employee;
+use App\Models\PayGrade;
 use App\Services\AuditService;
 use App\Services\SalaryService;
 use Illuminate\Http\Request;
@@ -81,7 +82,7 @@ class EmployeeController extends Controller
     public function show(Employee $employee)
     {
         $user = auth()->user();
-        $employee->load('department', 'designation');
+        $employee->load('department.faculty', 'designation', 'payGrade');
 
         $attendance = $user->hasPermission('attendance.view')
             ? $employee->attendances()->orderByDesc('date')->limit(15)->get() : collect();
@@ -167,6 +168,7 @@ class EmployeeController extends Controller
             // Only active departments/designations can be chosen, plus the one the employee already has.
             'departments' => Department::where('status', 'active')->orWhere('id', $employee->department_id)->orderBy('name')->pluck('name', 'id'),
             'designations' => Designation::where('status', 'active')->orWhere('id', $employee->designation_id)->orderBy('name')->pluck('name', 'id'),
+            'payGrades' => PayGrade::where('status', 'active')->orWhere('id', $employee->pay_grade_id)->orderBy('grade_no')->get()->mapWithKeys(fn ($g) => [$g->id => $g->label]),
         ];
     }
 

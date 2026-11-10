@@ -11,6 +11,15 @@
                     <input type="search" id="q" name="q" value="{{ request('q') }}" class="form-control" placeholder="Department name">
                 </div>
                 <div class="col-md-3">
+                    <label for="faculty_id" class="form-label small text-muted mb-1">Faculty</label>
+                    <select id="faculty_id" name="faculty_id" class="form-select">
+                        <option value="">All</option>
+                        @foreach ($faculties as $faculty)
+                            <option value="{{ $faculty->id }}" @selected((string) request('faculty_id') === (string) $faculty->id)>{{ $faculty->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label for="status" class="form-label small text-muted mb-1">Status</label>
                     <select id="status" name="status" class="form-select">
                         <option value="">All</option>
@@ -37,6 +46,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Faculty</th>
                         <th>Description</th>
                         <th class="text-center">Employees</th>
                         <th>Status</th>
@@ -49,6 +59,7 @@
                             <td class="fw-semibold">
                                 <a href="{{ route('departments.show', $department) }}" class="text-decoration-none">{{ $department->name }}</a>
                             </td>
+                            <td>{{ $department->faculty?->name ?? 'Administrative office' }}</td>
                             <td class="text-muted">{{ \Illuminate\Support\Str::limit($department->description, 70) ?: '—' }}</td>
                             <td class="text-center">{{ $department->employees_count }}</td>
                             <td><x-status-badge :status="$department->status" /></td>
@@ -69,7 +80,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5">
+                            <td colspan="6">
                                 <div class="empty-state">
                                     <i class="bi bi-diagram-3"></i>
                                     No departments found.

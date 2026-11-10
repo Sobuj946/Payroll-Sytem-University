@@ -8,6 +8,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\IncrementController;
+use App\Http\Controllers\PayGradeController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\MyLeaveController;
@@ -46,6 +49,17 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
     Route::get('departments/{department}', [DepartmentController::class, 'show'])
         ->middleware('permission:departments.view')->name('departments.show');
+
+    Route::middleware('permission:departments.view')->group(function () {
+        Route::get('faculties', [FacultyController::class, 'index'])->name('faculties.index');
+    });
+    Route::middleware('permission:departments.manage')->group(function () {
+        Route::get('faculties/create', [FacultyController::class, 'create'])->name('faculties.create');
+        Route::post('faculties', [FacultyController::class, 'store'])->name('faculties.store');
+        Route::get('faculties/{faculty}/edit', [FacultyController::class, 'edit'])->name('faculties.edit');
+        Route::put('faculties/{faculty}', [FacultyController::class, 'update'])->name('faculties.update');
+        Route::patch('faculties/{faculty}/status', [FacultyController::class, 'toggleStatus'])->name('faculties.status');
+    });
 
     Route::middleware('permission:designations.view')->group(function () {
         Route::get('designations', [DesignationController::class, 'index'])->name('designations.index');
@@ -117,6 +131,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('permission:salary.view')->group(function () {
         Route::get('salary', [SalaryController::class, 'index'])->name('salary.index');
         Route::get('salary/components', [SalaryComponentController::class, 'index'])->name('salary.components.index');
+        Route::get('salary/grades', [PayGradeController::class, 'index'])->name('salary.grades.index');
     });
     Route::middleware('permission:salary.manage')->group(function () {
         Route::get('salary/components/create', [SalaryComponentController::class, 'create'])->name('salary.components.create');
@@ -124,6 +139,15 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('salary/components/{component}/edit', [SalaryComponentController::class, 'edit'])->name('salary.components.edit');
         Route::put('salary/components/{component}', [SalaryComponentController::class, 'update'])->name('salary.components.update');
         Route::patch('salary/components/{component}/status', [SalaryComponentController::class, 'toggleStatus'])->name('salary.components.status');
+
+        Route::get('salary/grades/create', [PayGradeController::class, 'create'])->name('salary.grades.create');
+        Route::post('salary/grades', [PayGradeController::class, 'store'])->name('salary.grades.store');
+        Route::get('salary/grades/{payGrade}/edit', [PayGradeController::class, 'edit'])->name('salary.grades.edit');
+        Route::put('salary/grades/{payGrade}', [PayGradeController::class, 'update'])->name('salary.grades.update');
+        Route::patch('salary/grades/{payGrade}/status', [PayGradeController::class, 'toggleStatus'])->name('salary.grades.status');
+
+        Route::get('salary/increments', [IncrementController::class, 'index'])->name('salary.increments.index');
+        Route::post('salary/increments', [IncrementController::class, 'apply'])->name('salary.increments.apply');
 
         Route::post('salary/employees/{employee}/basic', [SalaryController::class, 'updateBasic'])->name('salary.basic');
         Route::post('salary/employees/{employee}/components', [SalaryController::class, 'assign'])->name('salary.assign');
@@ -138,6 +162,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->middleware('permission:payroll.view')->name('salary.adjustments.index');
     Route::middleware('permission:payroll.process')->group(function () {
         Route::post('salary/adjustments', [PayrollAdjustmentController::class, 'store'])->name('salary.adjustments.store');
+        Route::post('salary/adjustments/bulk', [PayrollAdjustmentController::class, 'storeForAll'])->name('salary.adjustments.bulk');
         Route::delete('salary/adjustments/{adjustment}', [PayrollAdjustmentController::class, 'destroy'])->name('salary.adjustments.destroy');
         Route::post('payroll/periods', [PayrollPeriodController::class, 'store'])->name('payroll.periods.store');
     });

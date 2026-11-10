@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="{{ asset('assets/js/theme-init.js') }}"></script>
-    <title>@yield('title', 'Dashboard') · {{ $companyName }}</title>
+    <title>@yield('title', 'Dashboard') · {{ $systemTitle }}</title>
     @include('partials.assets-css')
     <link href="{{ asset('assets/css/app.css') }}" rel="stylesheet">
     @stack('styles')
@@ -22,7 +22,7 @@
         </main>
 
         <footer class="app-footer">
-            &copy; {{ date('Y') }} {{ $companyName }} &middot; Payroll Management System
+            &copy; {{ date('Y') }} {{ $companyName }} &middot; {{ $systemTitle }}
         </footer>
     </div>
 </div>

@@ -28,6 +28,10 @@
                 <ul class="list-group list-group-flush small">
                     <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Employee ID</span><span>{{ $employee->employee_code }}</span></li>
                     <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Department</span><span>{{ $employee->department?->name }}</span></li>
+                    @if ($employee->department?->faculty)
+                        <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Faculty</span><span class="text-end">{{ $employee->department->faculty->name }}</span></li>
+                    @endif
+                    <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Pay grade</span><span>{{ $employee->payGrade ? 'Grade ' . $employee->payGrade->grade_no : '—' }}</span></li>
                     <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Joined</span><span>{{ $employee->joining_date->format('d M Y') }}</span></li>
                     <li class="list-group-item d-flex justify-content-between"><span class="text-muted">Type</span><span>{{ \App\Models\Employee::EMPLOYMENT_TYPES[$employee->employment_type] ?? $employee->employment_type }}</span></li>
                 </ul>
@@ -63,6 +67,7 @@
                                     <dt class="col-5">Gender</dt><dd class="col-7">{{ \App\Models\Employee::GENDERS[$employee->gender] ?? $employee->gender }}</dd>
                                     <dt class="col-5">Date of birth</dt><dd class="col-7">{{ $employee->date_of_birth->format('d M Y') }}</dd>
                                     <dt class="col-5">NID</dt><dd class="col-7">{{ $employee->nid }}</dd>
+                                    <dt class="col-5">TIN</dt><dd class="col-7">{{ $employee->tin ?: '—' }}</dd>
                                     <dt class="col-5">Email</dt><dd class="col-7 text-break">{{ $employee->email }}</dd>
                                     <dt class="col-5">Mobile</dt><dd class="col-7">{{ $employee->phone }}</dd>
                                     <dt class="col-5">Address</dt><dd class="col-7">{{ $employee->address ?: '—' }}</dd>
@@ -79,6 +84,7 @@
                                     <dt class="col-5">Bank</dt><dd class="col-7">{{ $employee->bank_name ?: '—' }}</dd>
                                     <dt class="col-5">Branch</dt><dd class="col-7">{{ $employee->bank_branch ?: '—' }}</dd>
                                     <dt class="col-5">Account</dt><dd class="col-7">{{ $employee->bank_account_number ?: '—' }}</dd>
+                                    <dt class="col-5">PF account</dt><dd class="col-7">{{ $employee->pf_account_no ?: '—' }}</dd>
                                 </dl>
                             </div>
                         </div>

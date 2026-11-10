@@ -19,6 +19,8 @@ class Employee extends Model
         'contract' => 'Contract',
         'probation' => 'Probation',
         'part_time' => 'Part-time',
+        'visiting' => 'Visiting / guest teacher',
+        'master_roll' => 'Master roll / daily wage',
     ];
 
     public const STATUSES = [
@@ -31,9 +33,9 @@ class Employee extends Model
 
     protected $fillable = [
         'employee_code', 'first_name', 'last_name', 'email', 'phone', 'address', 'gender',
-        'date_of_birth', 'nid', 'emergency_contact_name', 'emergency_contact_phone', 'photo',
-        'department_id', 'designation_id', 'employment_type', 'joining_date', 'basic_salary',
-        'bank_name', 'bank_account_number', 'bank_branch', 'status',
+        'date_of_birth', 'nid', 'tin', 'emergency_contact_name', 'emergency_contact_phone', 'photo',
+        'department_id', 'designation_id', 'pay_grade_id', 'employment_type', 'joining_date', 'basic_salary', 'last_increment_on',
+        'bank_name', 'bank_account_number', 'bank_branch', 'pf_account_no', 'status',
     ];
 
     protected function casts(): array
@@ -41,17 +43,19 @@ class Employee extends Model
         return [
             'date_of_birth' => 'date',
             'joining_date' => 'date',
+            'last_increment_on' => 'date',
             'basic_salary' => 'decimal:2',
         ];
     }
 
-    /** Next free code in the EMP-0001 format. */
+    /** Next free code in the PREFIX-0001 format. The prefix is a setting (EMP by default, HSTU for the university). */
     public static function nextCode(): string
     {
+        $prefix = Setting::get('employee_code_prefix') ?: 'EMP';
         $last = static::withTrashed()->orderByDesc('id')->value('employee_code');
-        $number = $last ? ((int) substr($last, 4)) + 1 : 1;
+        $number = $last ? ((int) substr($last, (int) strrpos($last, '-') + 1)) + 1 : 1;
 
-        return sprintf('EMP-%04d', $number);
+        return sprintf('%s-%04d', $prefix, $number);
     }
 
     public function getFullNameAttribute(): string
@@ -77,6 +81,11 @@ class Employee extends Model
     public function designation(): BelongsTo
     {
         return $this->belongsTo(Designation::class);
+    }
+
+    public function payGrade(): BelongsTo
+    {
+        return $this->belongsTo(PayGrade::class);
     }
 
     public function user(): HasOne

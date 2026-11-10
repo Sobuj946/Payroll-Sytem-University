@@ -9,6 +9,7 @@
         ],
         'People' => [
             ['Employees', 'bi-people', 'employees.index', ['employees.view'], 'employees.*'],
+            ['Faculties', 'bi-buildings', 'faculties.index', ['departments.view'], 'faculties.*'],
             ['Departments', 'bi-diagram-3', 'departments.index', ['departments.view'], 'departments.*'],
             ['Designations', 'bi-award', 'designations.index', ['designations.view'], 'designations.*'],
         ],
@@ -56,8 +57,8 @@
 <aside class="app-sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="appSidebar" aria-label="Main menu">
     <div class="sidebar-brand d-flex justify-content-between align-items-start">
         <div>
-            <div class="brand-name">{{ $companyName }}</div>
-            <div class="brand-sub">Payroll System</div>
+            <div class="brand-name">{{ $companyShort }}</div>
+            <div class="brand-sub">{{ $systemTitle }}</div>
         </div>
         <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#appSidebar" aria-label="Close"></button>
     </div>

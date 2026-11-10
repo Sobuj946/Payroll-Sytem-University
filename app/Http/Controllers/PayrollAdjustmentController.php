@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\BusinessRuleException;
+use App\Models\Department;
+use App\Models\Designation;
 use App\Models\Employee;
 use App\Models\PayrollAdjustment;
 use App\Models\PayrollPeriod;
 use App\Models\SalaryComponent;
 use App\Services\AuditService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -34,6 +37,7 @@ class PayrollAdjustmentController extends Controller
                 ? Employee::where('status', 'active')->whereDate('joining_date', '<=', $period->end_date->toDateString())->orderBy('employee_code')->get()
                 : collect(),
             'components' => SalaryComponent::active()->where('source', 'adjustment')->orderBy('type')->orderBy('name')->get(),
+            'departments' => Department::orderBy('name')->get(['id', 'name']),
             'canEdit' => $period && in_array($period->status, ['draft', 'processed'], true) && auth()->user()->hasPermission('payroll.process'),
         ]);
     }
@@ -75,6 +79,82 @@ class PayrollAdjustmentController extends Controller
         );
 
         return back()->with('success', "{$component->name} has been added for {$employee->full_name}.");
+    }
+
+    /**
+     * Gives the same item to many employees at once (for example the festival bonus of 100% of basic salary).
+     * Employees who already have this item in the month are skipped, so pressing the button twice is harmless.
+     */
+    public function storeForAll(Request $request)
+    {
+        $data = $request->validate([
+            'payroll_period_id' => ['required', 'integer', 'exists:payroll_periods,id'],
+            'salary_component_id' => ['required', 'integer', Rule::exists('salary_components', 'id')->where('source', 'adjustment')->where('status', 'active')],
+            'basis' => ['required', Rule::in(['percent_of_basic', 'fixed'])],
+            'value' => ['required', 'numeric', 'gt:0', 'max:99999999'],
+            'category' => ['nullable', Rule::in(array_keys(Designation::CATEGORIES))],
+            'department_id' => ['nullable', 'integer', 'exists:departments,id'],
+            'note' => ['nullable', 'string', 'max:255'],
+        ], [
+            'salary_component_id.required' => 'Please choose what you are adding.',
+            'basis.required' => 'Please choose how the amount is worked out.',
+            'value.required' => 'Please enter the percentage or the amount.',
+            'value.gt' => 'The value must be more than zero.',
+        ]);
+
+        if ($data['basis'] === 'percent_of_basic' && (float) $data['value'] > 500) {
+            throw new BusinessRuleException('A percentage of basic salary cannot be more than 500.');
+        }
+
+        $period = PayrollPeriod::findOrFail($data['payroll_period_id']);
+        $this->ensureEditable($period);
+        $component = SalaryComponent::findOrFail($data['salary_component_id']);
+
+        $employees = Employee::where('status', 'active')
+            ->whereDate('joining_date', '<=', $period->end_date->toDateString())
+            ->when($data['department_id'] ?? null, fn ($q, $id) => $q->where('department_id', $id))
+            ->when($data['category'] ?? null, fn ($q, $category) => $q->whereHas('designation', fn ($d) => $d->where('category', $category)))
+            ->get();
+
+        $already = PayrollAdjustment::where('payroll_period_id', $period->id)
+            ->where('salary_component_id', $component->id)->pluck('employee_id')->flip();
+
+        $added = 0;
+
+        DB::transaction(function () use ($employees, $already, $data, $period, $request, &$added) {
+            foreach ($employees as $employee) {
+                if (isset($already[$employee->id])) {
+                    continue;
+                }
+
+                $amount = $data['basis'] === 'percent_of_basic'
+                    ? round((float) $employee->basic_salary * (float) $data['value'] / 100, 2)
+                    : round((float) $data['value'], 2);
+
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                PayrollAdjustment::create([
+                    'payroll_period_id' => $period->id,
+                    'employee_id' => $employee->id,
+                    'salary_component_id' => $data['salary_component_id'],
+                    'amount' => $amount,
+                    'note' => $data['note'] ?? null,
+                    'created_by' => $request->user()->id,
+                ]);
+                $added++;
+            }
+        });
+
+        if ($added === 0) {
+            throw new BusinessRuleException('Nobody was added: everyone who matches already has this item for the month, or nobody matches the choice.');
+        }
+
+        $how = $data['basis'] === 'percent_of_basic' ? $data['value'] . '% of basic salary' : '৳' . number_format((float) $data['value'], 2) . ' each';
+        AuditService::log('adjustment_added', 'payroll', "{$component->name} ({$how}) was added for {$added} employees in {$period->label}", $period->id);
+
+        return back()->with('success', "{$component->name} has been added for {$added} employees.");
     }
 
     public function destroy(PayrollAdjustment $adjustment)

@@ -10,11 +10,11 @@ It covers every module: authentication, authorization, employees, departments, a
 | Level | What it checks | How | Where |
 |---|---|---|---|
 | **Unit testing** | One rule at a time: working hours, late status, leave days, salary structure maths, report filters | Automated (PHPUnit), no browser | `tests/Unit` (20 cases) |
-| **Integration testing** | Several parts working together: a request goes through the permission check, validation, service, database and audit log | Automated (PHPUnit, real MySQL test database) | `tests/Feature` (170 cases) |
+| **Integration testing** | Several parts working together: a request goes through the permission check, validation, service, database and audit log | Automated (PHPUnit, real MySQL test database) | `tests/Feature` (203 cases) |
 | **System testing** | The finished application used the way an organization uses it, month-end from start to finish, in a browser | Manual script (section 6) | browser |
 | **User acceptance testing (UAT)** | People in each role confirm the system fits their work | Manual scenarios (section 7), signed off by the users | browser |
 
-All 190 automated cases are listed with Scenario, Preconditions, Input and Expected Result in `docs/test-cases.md` (and `docs/test-cases.csv` for Excel).
+All 223 automated cases are listed with Scenario, Preconditions, Input and Expected Result in `docs/test-cases.md` (and `docs/test-cases.csv` for Excel).
 
 ## 3. Test environment
 
@@ -54,8 +54,9 @@ python3 docs/fill_results.py          # fills Actual Result and Status in docs/t
 | Reports | 11 |
 | Administration | 20 |
 | Desktop packaging | 10 |
+| University | 33 |
 | Unit tests | 20 |
-| **Total** | **190** |
+| **Total** | **223** |
 
 What the automated cases deliberately include: the permission matrix for every role and page, duplicate prevention at both application and database level, boundary values (late by one minute, a 150% rate, a future date), transaction rollback, locked payroll, audit entries, and the rule that no figure is invented (no slab means no tax).
 

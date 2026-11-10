@@ -133,6 +133,64 @@
                             </form>
                         </div>
                     </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">Add to many employees</div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ route('salary.adjustments.bulk') }}"
+                                  data-confirm="Add this item for every matching employee for {{ $period->label }}? People who already have it are skipped.">
+                                @csrf
+                                <input type="hidden" name="payroll_period_id" value="{{ $period->id }}">
+
+                                <div class="mb-3">
+                                    <label for="bulk_component" class="form-label">Item</label>
+                                    <select id="bulk_component" name="salary_component_id" class="form-select" required>
+                                        <option value="">Select...</option>
+                                        @foreach ($components as $item)
+                                            <option value="{{ $item->id }}">{{ $item->name }} ({{ $item->type === 'earning' ? 'added' : 'deducted' }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-7">
+                                        <label for="bulk_basis" class="form-label">Worked out as</label>
+                                        <select id="bulk_basis" name="basis" class="form-select">
+                                            <option value="percent_of_basic">% of basic salary</option>
+                                            <option value="fixed">Same amount (৳) for each</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-5">
+                                        <label for="bulk_value" class="form-label">Value</label>
+                                        <input type="number" id="bulk_value" name="value" step="0.01" min="0.01" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="bulk_category" class="form-label">Who</label>
+                                    <select id="bulk_category" name="category" class="form-select">
+                                        <option value="">Everyone</option>
+                                        @foreach (\App\Models\Designation::CATEGORIES as $key => $label)
+                                            <option value="{{ $key }}">Only {{ strtolower($label) }}s</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="bulk_department" class="form-label">Department</label>
+                                    <select id="bulk_department" name="department_id" class="form-select">
+                                        <option value="">All departments</option>
+                                        @foreach ($departments as $department)
+                                            <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="bulk_note" class="form-label">Note</label>
+                                    <input type="text" id="bulk_note" name="note" maxlength="255" class="form-control" placeholder="e.g. Eid-ul-Fitr festival bonus">
+                                </div>
+                                <button type="submit" class="btn btn-outline-primary w-100">Add for everyone who matches</button>
+                                <div class="form-text mt-2">For example the festival bonus: 100% of basic salary for everyone. Only active employees who had joined by the end of the month are included.</div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             @endif
         </div>

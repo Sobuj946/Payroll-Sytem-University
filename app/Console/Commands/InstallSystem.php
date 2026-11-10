@@ -7,6 +7,8 @@ use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\DemoDataSeeder;
 use Database\Seeders\LeaveTypeSeeder;
+use Database\Seeders\UniversityDemoSeeder;
+use Database\Seeders\UniversitySeeder;
 use Database\Seeders\OrganizationSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\SalaryComponentSeeder;
@@ -32,6 +34,7 @@ class InstallSystem extends Command
                             {--email= : Administrator email}
                             {--password= : Administrator password}
                             {--company= : Organization name}
+                            {--university : Set up for the university: faculties, pay grades, university leave types and allowances}
                             {--demo : Also load the demonstration employees, attendance and leave}';
 
     protected $description = 'First-time setup: tables, basic data and the first administrator';
@@ -62,7 +65,11 @@ class InstallSystem extends Command
         $this->call('migrate', ['--force' => true]);
 
         $this->info('Loading the basic data ...');
-        foreach ([RolePermissionSeeder::class, SettingSeeder::class, OrganizationSeeder::class, LeaveTypeSeeder::class, SalaryComponentSeeder::class] as $seeder) {
+        $seeders = $this->option('university')
+            ? [RolePermissionSeeder::class, SettingSeeder::class, SalaryComponentSeeder::class, UniversitySeeder::class]
+            : [RolePermissionSeeder::class, SettingSeeder::class, OrganizationSeeder::class, LeaveTypeSeeder::class, SalaryComponentSeeder::class];
+
+        foreach ($seeders as $seeder) {
             $this->callSilent('db:seed', ['--class' => $seeder, '--force' => true]);
         }
 
@@ -74,7 +81,7 @@ class InstallSystem extends Command
             'status' => 'active',
         ]);
 
-        $company = $this->option('company') ?: ($this->input->isInteractive() ? $this->ask('Organization name', 'My Organization') : null);
+        $company = $this->option('company') ?: ($this->input->isInteractive() && ! $this->option('university') ? $this->ask('Organization name', 'My Organization') : null);
         if ($company) {
             Setting::put('company_name', $company);
         }
@@ -83,7 +90,7 @@ class InstallSystem extends Command
 
         if ($this->option('demo')) {
             $this->info('Loading the demonstration data ...');
-            $this->callSilent('db:seed', ['--class' => DemoDataSeeder::class, '--force' => true]);
+            $this->callSilent('db:seed', ['--class' => $this->option('university') ? UniversityDemoSeeder::class : DemoDataSeeder::class, '--force' => true]);
             $this->warn('The demonstration accounts all use the password Password@123. Delete or change them before real use.');
         }
 
@@ -92,6 +99,9 @@ class InstallSystem extends Command
         $this->line('Next:');
         $this->line('  1. php artisan pms:install-assets      (once, makes the system work without internet)');
         $this->line('  2. Open Settings and check the company details, holidays and the tax slabs.');
+        if ($this->option('university')) {
+            $this->warn('     The faculties, departments, posts, pay grades, leave types and allowances are SAMPLES. Check each one against the university\'s own rules and correct it in the system.');
+        }
         $this->warn('     The tax slabs that come with the system are SAMPLE rates. Replace them with the rules your organization follows.');
         $this->line('  3. php artisan pms:security-check');
 

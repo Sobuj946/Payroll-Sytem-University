@@ -33,6 +33,22 @@
                                 <label for="company_name" class="form-label">Organization name <span class="text-danger">*</span></label>
                                 <input type="text" id="company_name" name="company_name" value="{{ old('company_name', $s['company_name']) }}" maxlength="120" class="form-control" required>
                             </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label for="company_short_name" class="form-label">Short name</label>
+                                    <input type="text" id="company_short_name" name="company_short_name" value="{{ old('company_short_name', $s['company_short_name']) }}" maxlength="20" class="form-control" placeholder="e.g. HSTU">
+                                </div>
+                                <div class="col-md-8">
+                                    <label for="system_title" class="form-label">Name of this system</label>
+                                    <input type="text" id="system_title" name="system_title" value="{{ old('system_title', $s['system_title']) }}" maxlength="80" class="form-control" placeholder="e.g. HSTU Payroll Management System">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="employee_code_prefix" class="form-label">Prefix of employee IDs</label>
+                                <input type="text" id="employee_code_prefix" name="employee_code_prefix" value="{{ old('employee_code_prefix', $s['employee_code_prefix']) }}" maxlength="10"
+                                       class="form-control text-uppercase" style="max-width: 12rem;" placeholder="EMP">
+                                <div class="form-text">New employees get IDs like <code>{{ old('employee_code_prefix', $s['employee_code_prefix']) }}-0001</code>. Existing IDs do not change.</div>
+                            </div>
                             <div class="mb-3">
                                 <label for="company_address" class="form-label">Address</label>
                                 <input type="text" id="company_address" name="company_address" value="{{ old('company_address', $s['company_address']) }}" maxlength="255" class="form-control">

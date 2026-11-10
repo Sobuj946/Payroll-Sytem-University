@@ -26,6 +26,7 @@
                     <x-form-select name="gender" label="Gender" :options="\App\Models\Employee::GENDERS" :value="$employee->gender" required col="4" />
                     <x-form-input name="date_of_birth" label="Date of birth" type="date" :value="$employee->date_of_birth?->format('Y-m-d')" required col="4" />
                     <x-form-input name="nid" label="NID number" :value="$employee->nid" required hint="10, 13 or 17 digits" maxlength="17" col="4" />
+                    <x-form-input name="tin" label="TIN (tax number)" :value="$employee->tin" hint="12 digits, if the person has one" maxlength="12" col="4" />
                     <div class="col-md-6">
                         <label for="photo" class="form-label">Photo</label>
                         <div class="d-flex align-items-center gap-3">
@@ -61,6 +62,7 @@
                 <div class="row g-3">
                     <x-form-select name="department_id" label="Department" :options="$departments" :value="$employee->department_id" required col="4" />
                     <x-form-select name="designation_id" label="Designation" :options="$designations" :value="$employee->designation_id" required col="4" />
+                    <x-form-select name="pay_grade_id" label="Pay grade" :options="$payGrades" :value="$employee->pay_grade_id" placeholder="Not placed in a grade" col="4" />
                     <x-form-select name="employment_type" label="Employment type" :options="\App\Models\Employee::EMPLOYMENT_TYPES" :value="$employee->employment_type" required col="4" />
                     <x-form-input name="joining_date" label="Date of joining" type="date" :value="$employee->joining_date?->format('Y-m-d')" required col="4" />
                     @if ($employee->exists)
@@ -80,6 +82,7 @@
                     <x-form-input name="bank_name" label="Bank name" :value="$employee->bank_name" maxlength="100" col="4" />
                     <x-form-input name="bank_branch" label="Branch" :value="$employee->bank_branch" maxlength="100" col="4" />
                     <x-form-input name="bank_account_number" label="Account number" :value="$employee->bank_account_number" maxlength="20" col="4" />
+                    <x-form-input name="pf_account_no" label="Provident fund account no." :value="$employee->pf_account_no" maxlength="30" col="4" />
                 </div>
             </div>
         </div>

@@ -37,6 +37,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Category</th>
                         <th>Description</th>
                         <th class="text-center">Employees</th>
                         <th>Status</th>
@@ -49,6 +50,7 @@
                             <td class="fw-semibold">
                                 <a href="{{ route('designations.show', $designation) }}" class="text-decoration-none">{{ $designation->name }}</a>
                             </td>
+                            <td>{{ \App\Models\Designation::CATEGORIES[$designation->category] ?? $designation->category }}</td>
                             <td class="text-muted">{{ \Illuminate\Support\Str::limit($designation->description, 70) ?: '—' }}</td>
                             <td class="text-center">{{ $designation->employees_count }}</td>
                             <td><x-status-badge :status="$designation->status" /></td>
@@ -69,7 +71,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5">
+                            <td colspan="6">
                                 <div class="empty-state">
                                     <i class="bi bi-award"></i>
                                     No designations found.

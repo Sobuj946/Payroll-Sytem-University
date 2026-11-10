@@ -288,7 +288,7 @@ class AdministrationTest extends TestCase
     public function test_audit_log_is_read_only(): void
     {
         $admin = $this->userWithRole('admin');
-        $this->actingAs($admin)->post(route('departments.store'), ['name' => 'Legal Affairs', 'status' => 'active']);
+        $this->actingAs($admin)->post(route('departments.store'), ['name' => 'Legal Affairs', 'type' => 'academic', 'status' => 'active']);
 
         $this->actingAs($admin)->get(route('audit.index', ['module' => 'departments']))
             ->assertOk()->assertSee('Legal Affairs');
