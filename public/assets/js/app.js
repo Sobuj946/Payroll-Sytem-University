@@ -111,3 +111,33 @@ document.addEventListener('change', function (event) {
     }
 });
 
+// Password fields can be revealed without changing their autocomplete or form behavior.
+document.querySelectorAll('input[type="password"]').forEach(function (input) {
+    if (input.dataset.passwordToggleReady === '1') return;
+    input.dataset.passwordToggleReady = '1';
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'password-toggle-wrap';
+    input.parentNode.insertBefore(wrapper, input);
+    wrapper.appendChild(input);
+
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'password-toggle';
+    button.setAttribute('aria-label', 'Show password');
+    button.setAttribute('title', 'Show password');
+    button.innerHTML = '<i class="bi bi-eye" aria-hidden="true"></i>';
+
+    button.addEventListener('click', function () {
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        button.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        button.setAttribute('title', show ? 'Hide password' : 'Show password');
+        button.innerHTML = show
+            ? '<i class="bi bi-eye-slash" aria-hidden="true"></i>'
+            : '<i class="bi bi-eye" aria-hidden="true"></i>';
+    });
+
+    wrapper.appendChild(button);
+});
+

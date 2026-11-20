@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Employee;
-use App\Models\PayGrade;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -33,6 +32,13 @@ class EmployeeRequest extends FormRequest
         $employee = $this->route('employee');
 
         return [
+            'employee_code' => [
+                $employee ? 'prohibited' : 'required',
+                'string',
+                'max:20',
+                'regex:/^[A-Za-z0-9][A-Za-z0-9_-]*$/',
+                Rule::unique('employees', 'employee_code')->ignore($employee?->id),
+            ],
             'first_name' => ['required', 'string', 'max:60'],
             'last_name' => ['required', 'string', 'max:60'],
             'email' => ['required', 'email', 'max:120', Rule::unique('employees', 'email')->ignore($employee?->id)],
@@ -40,14 +46,12 @@ class EmployeeRequest extends FormRequest
             'address' => ['nullable', 'string', 'max:255'],
             'gender' => ['required', Rule::in(array_keys(Employee::GENDERS))],
             'date_of_birth' => ['required', 'date', 'before_or_equal:' . now()->subYears(18)->toDateString()],
-            'tin' => ['nullable', 'regex:/^\d{12}$/', Rule::unique('employees', 'tin')->ignore($employee?->id)],
             'nid' => ['required', 'regex:/^(\d{10}|\d{13}|\d{17})$/', Rule::unique('employees', 'nid')->ignore($employee?->id)],
             'emergency_contact_name' => ['nullable', 'string', 'max:100'],
             'emergency_contact_phone' => ['nullable', 'regex:' . self::PHONE_PATTERN],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
             'department_id' => ['required', 'integer', 'exists:departments,id'],
             'designation_id' => ['required', 'integer', 'exists:designations,id'],
-            'pay_grade_id' => ['nullable', 'integer', 'exists:pay_grades,id'],
             'employment_type' => ['required', Rule::in(array_keys(Employee::EMPLOYMENT_TYPES))],
             'joining_date' => ['required', 'date', 'after:date_of_birth'],
             // Changing an existing employee's salary needs the salary.manage permission (HR can only add a starting salary).
@@ -58,7 +62,6 @@ class EmployeeRequest extends FormRequest
             'bank_name' => ['nullable', 'string', 'max:100'],
             'bank_account_number' => ['nullable', 'required_with:bank_name', 'regex:/^[0-9]{8,20}$/'],
             'bank_branch' => ['nullable', 'string', 'max:100'],
-            'pf_account_no' => ['nullable', 'string', 'max:30'],
             'status' => [$employee ? 'required' : 'nullable', Rule::in(array_keys(Employee::STATUSES))],
         ];
     }
@@ -66,6 +69,9 @@ class EmployeeRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'employee_code.required' => 'Please enter an employee ID.',
+            'employee_code.unique' => 'This employee ID is already in use.',
+            'employee_code.regex' => 'Use only letters, numbers, hyphens or underscores in the employee ID.',
             'first_name.required' => 'Please enter the first name.',
             'last_name.required' => 'Please enter the last name.',
             'email.required' => 'Please enter an email address.',
@@ -79,8 +85,6 @@ class EmployeeRequest extends FormRequest
             'nid.required' => 'Please enter the NID number.',
             'nid.regex' => 'The NID must have 10, 13 or 17 digits.',
             'nid.unique' => 'Another employee already has this NID number.',
-            'tin.regex' => 'The TIN must have exactly 12 digits.',
-            'tin.unique' => 'Another employee already has this TIN.',
             'emergency_contact_phone.regex' => 'Enter a valid Bangladesh mobile number for the emergency contact.',
             'photo.image' => 'The photo must be an image file.',
             'photo.mimes' => 'The photo must be a JPG or PNG file.',
@@ -107,8 +111,6 @@ class EmployeeRequest extends FormRequest
                 ['designation_id', Designation::class, 'designation'],
             ];
 
-            $this->checkPayGrade($validator);
-
             foreach ($checks as [$field, $model, $label]) {
                 $id = $this->input($field);
 
@@ -124,37 +126,5 @@ class EmployeeRequest extends FormRequest
                 }
             }
         });
-    }
-
-    /**
-     * An employee placed in a pay grade must have a basic salary inside that grade's range.
-     * If the salary is not part of this request (HR cannot change salaries), the salary on file is checked.
-     */
-    private function checkPayGrade($validator): void
-    {
-        if ($validator->errors()->has('pay_grade_id') || $validator->errors()->has('basic_salary') || ! $this->filled('pay_grade_id')) {
-            return;
-        }
-
-        $grade = PayGrade::find($this->input('pay_grade_id'));
-        $employee = $this->route('employee');
-
-        if (! $grade) {
-            return;
-        }
-
-        // An inactive grade is only accepted if the employee already has it.
-        if ($grade->status !== 'active' && (int) $grade->id !== (int) $employee?->pay_grade_id) {
-            $validator->errors()->add('pay_grade_id', 'The selected pay grade is not active.');
-
-            return;
-        }
-
-        $basic = $this->filled('basic_salary') ? (float) $this->input('basic_salary') : ($employee ? (float) $employee->basic_salary : null);
-
-        if ($basic !== null && ! $grade->allows($basic)) {
-            $field = $this->filled('basic_salary') ? 'basic_salary' : 'pay_grade_id';
-            $validator->errors()->add($field, '৳' . number_format($basic, 2) . " is outside the scale of {$grade->label}.");
-        }
     }
 }

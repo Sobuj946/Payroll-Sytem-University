@@ -165,15 +165,6 @@
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="bulk_category" class="form-label">Who</label>
-                                    <select id="bulk_category" name="category" class="form-select">
-                                        <option value="">Everyone</option>
-                                        @foreach (\App\Models\Designation::CATEGORIES as $key => $label)
-                                            <option value="{{ $key }}">Only {{ strtolower($label) }}s</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="mb-3">
                                     <label for="bulk_department" class="form-label">Department</label>
                                     <select id="bulk_department" name="department_id" class="form-select">
                                         <option value="">All departments</option>

@@ -19,8 +19,6 @@ class Employee extends Model
         'contract' => 'Contract',
         'probation' => 'Probation',
         'part_time' => 'Part-time',
-        'visiting' => 'Visiting / guest teacher',
-        'master_roll' => 'Master roll / daily wage',
     ];
 
     public const STATUSES = [
@@ -33,9 +31,9 @@ class Employee extends Model
 
     protected $fillable = [
         'employee_code', 'first_name', 'last_name', 'email', 'phone', 'address', 'gender',
-        'date_of_birth', 'nid', 'tin', 'emergency_contact_name', 'emergency_contact_phone', 'photo',
-        'department_id', 'designation_id', 'pay_grade_id', 'employment_type', 'joining_date', 'basic_salary', 'last_increment_on',
-        'bank_name', 'bank_account_number', 'bank_branch', 'pf_account_no', 'status',
+        'date_of_birth', 'nid', 'emergency_contact_name', 'emergency_contact_phone', 'photo',
+        'department_id', 'designation_id', 'employment_type', 'joining_date', 'basic_salary',
+        'bank_name', 'bank_account_number', 'bank_branch', 'status',
     ];
 
     protected function casts(): array
@@ -43,19 +41,29 @@ class Employee extends Model
         return [
             'date_of_birth' => 'date',
             'joining_date' => 'date',
-            'last_increment_on' => 'date',
             'basic_salary' => 'decimal:2',
         ];
     }
 
-    /** Next free code in the PREFIX-0001 format. The prefix is a setting (EMP by default, HSTU for the university). */
+    /** Next free code in the configured PREFIX-0001 format (EMP by default). */
     public static function nextCode(): string
     {
         $prefix = Setting::get('employee_code_prefix') ?: 'EMP';
-        $last = static::withTrashed()->orderByDesc('id')->value('employee_code');
-        $number = $last ? ((int) substr($last, (int) strrpos($last, '-') + 1)) + 1 : 1;
+        $number = static::withTrashed()
+            ->where('employee_code', 'like', $prefix . '-%')
+            ->pluck('employee_code')
+            ->map(function (string $code) use ($prefix) {
+                $suffix = substr($code, strlen($prefix) + 1);
 
-        return sprintf('%s-%04d', $prefix, $number);
+                return ctype_digit($suffix) ? (int) $suffix : 0;
+            })
+            ->max() + 1;
+
+        do {
+            $code = sprintf('%s-%04d', $prefix, $number++);
+        } while (static::withTrashed()->where('employee_code', $code)->exists());
+
+        return $code;
     }
 
     public function getFullNameAttribute(): string
@@ -81,11 +89,6 @@ class Employee extends Model
     public function designation(): BelongsTo
     {
         return $this->belongsTo(Designation::class);
-    }
-
-    public function payGrade(): BelongsTo
-    {
-        return $this->belongsTo(PayGrade::class);
     }
 
     public function user(): HasOne

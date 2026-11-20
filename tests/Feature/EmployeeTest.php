@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Employee;
+use App\Models\Setting;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
@@ -13,6 +14,7 @@ class EmployeeTest extends TestCase
     private function payload(array $overrides = []): array
     {
         return array_merge([
+            'employee_code' => Employee::nextCode(),
             'first_name' => 'Rahim',
             'last_name' => 'Uddin',
             'email' => 'rahim.uddin@example.test',
@@ -61,6 +63,61 @@ class EmployeeTest extends TestCase
         $this->assertStringStartsWith('EMP-', $employee->employee_code);
         $this->assertSame('active', $employee->status);
         $this->assertDatabaseHas('audit_logs', ['action' => 'created', 'module' => 'employees', 'record_id' => $employee->id]);
+    }
+
+    public function test_add_form_shows_employee_id_as_editable_with_a_suggested_value(): void
+    {
+        $this->actingAs($this->userWithRole('hr_manager'))
+            ->get(route('employees.create'))
+            ->assertOk()
+            ->assertSee('name="employee_code"', false)
+            ->assertSee('value="EMP-0001"', false);
+    }
+
+    public function test_new_employee_uses_the_configured_code_prefix(): void
+    {
+        Setting::put('employee_code_prefix', 'PT');
+
+        $this->actingAs($this->userWithRole('hr_manager'))
+            ->post(route('employees.store'), $this->payload())
+            ->assertSessionHasNoErrors();
+
+        $employee = Employee::where('email', 'rahim.uddin@example.test')->firstOrFail();
+        $this->assertStringStartsWith('PT-', $employee->employee_code);
+    }
+
+    public function test_new_employee_gets_a_unique_code_when_existing_codes_are_out_of_order(): void
+    {
+        $this->makeEmployee(['employee_code' => 'EMP-0001']);
+        $this->makeEmployee(['employee_code' => 'EMP-0000']);
+
+        $this->actingAs($this->userWithRole('hr_manager'))
+            ->post(route('employees.store'), $this->payload())
+            ->assertSessionHasNoErrors();
+
+        $employee = Employee::where('email', 'rahim.uddin@example.test')->firstOrFail();
+        $this->assertSame('EMP-0002', $employee->employee_code);
+    }
+
+    public function test_employee_id_can_be_set_when_creating_an_employee(): void
+    {
+        $this->actingAs($this->userWithRole('hr_manager'))
+            ->post(route('employees.store'), $this->payload(['employee_code' => 'PADMA-42']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('employees', [
+            'email' => 'rahim.uddin@example.test',
+            'employee_code' => 'PADMA-42',
+        ]);
+    }
+
+    public function test_duplicate_employee_id_is_rejected_without_a_server_error(): void
+    {
+        $this->makeEmployee(['employee_code' => 'PADMA-42']);
+
+        $this->actingAs($this->userWithRole('hr_manager'))->from('/employees/create')
+            ->post(route('employees.store'), $this->payload(['employee_code' => 'PADMA-42']))
+            ->assertSessionHasErrors('employee_code');
     }
 
     /** TC-EMP-002: Create employee with a duplicate email */

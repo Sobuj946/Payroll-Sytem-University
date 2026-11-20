@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\BusinessRuleException;
 use App\Models\Department;
-use App\Models\Designation;
 use App\Models\Employee;
 use App\Models\PayrollAdjustment;
 use App\Models\PayrollPeriod;
@@ -92,7 +91,6 @@ class PayrollAdjustmentController extends Controller
             'salary_component_id' => ['required', 'integer', Rule::exists('salary_components', 'id')->where('source', 'adjustment')->where('status', 'active')],
             'basis' => ['required', Rule::in(['percent_of_basic', 'fixed'])],
             'value' => ['required', 'numeric', 'gt:0', 'max:99999999'],
-            'category' => ['nullable', Rule::in(array_keys(Designation::CATEGORIES))],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'note' => ['nullable', 'string', 'max:255'],
         ], [
@@ -113,7 +111,6 @@ class PayrollAdjustmentController extends Controller
         $employees = Employee::where('status', 'active')
             ->whereDate('joining_date', '<=', $period->end_date->toDateString())
             ->when($data['department_id'] ?? null, fn ($q, $id) => $q->where('department_id', $id))
-            ->when($data['category'] ?? null, fn ($q, $category) => $q->whereHas('designation', fn ($d) => $d->where('category', $category)))
             ->get();
 
         $already = PayrollAdjustment::where('payroll_period_id', $period->id)

@@ -23,7 +23,7 @@ class DesignationController extends Controller
 
     public function create()
     {
-        return view('designations.form', ['designation' => new Designation(['status' => 'active', 'category' => 'staff'])]);
+        return view('designations.form', ['designation' => new Designation(['status' => 'active'])]);
     }
 
     public function store(Request $request)
@@ -83,11 +83,9 @@ class DesignationController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:100', Rule::unique('designations', 'name')->ignore($designation?->id)],
-            'category' => ['required', Rule::in(array_keys(Designation::CATEGORIES))],
             'description' => ['nullable', 'string', 'max:500'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
         ], [
-            'category.required' => 'Please choose whether this post is for a teacher, an officer or staff.',
             'name.required' => 'Please enter the designation name.',
             'name.unique' => 'A designation with this name already exists.',
             'name.max' => 'The designation name may not be longer than 100 characters.',

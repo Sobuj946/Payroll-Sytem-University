@@ -23,5 +23,6 @@
     </div>
 </div>
 @include('partials.assets-js')
+<script src="{{ asset('assets/js/app.js') }}"></script>
 </body>
 </html>

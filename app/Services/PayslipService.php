@@ -13,7 +13,7 @@ class PayslipService
 
     public function data(Payroll $payroll): array
     {
-        $payroll->loadMissing('period', 'employee.department', 'employee.designation', 'employee.payGrade', 'items', 'payments');
+        $payroll->loadMissing('period', 'employee.department', 'employee.designation', 'items', 'payments');
 
         $earnings = $payroll->items->where('type', 'earning')->values();
         $deductions = $payroll->items->where('type', 'deduction')->values();

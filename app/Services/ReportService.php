@@ -6,7 +6,6 @@ use App\Models\Attendance;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Employee;
-use App\Models\Faculty;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Models\Payment;
@@ -44,8 +43,6 @@ class ReportService
             'employees.active' => ['title' => 'Active employees', 'group' => 'Employees', 'permission' => $employee, 'filters' => ['department_id', 'designation_id', 'employment_type'], 'about' => 'Employees who are currently active.'],
             'employees.department' => ['title' => 'Department-wise employees', 'group' => 'Employees', 'permission' => $employee, 'filters' => [], 'about' => 'Head count of each department.'],
             'employees.designation' => ['title' => 'Designation-wise employees', 'group' => 'Employees', 'permission' => $employee, 'filters' => [], 'about' => 'Head count of each designation.'],
-            'employees.faculty' => ['title' => 'Faculty and department-wise employees', 'group' => 'Employees', 'permission' => $employee, 'filters' => [], 'about' => 'Head count of every department, grouped by faculty.'],
-            'employees.category' => ['title' => 'Teachers, officers and staff', 'group' => 'Employees', 'permission' => $employee, 'filters' => [], 'about' => 'Head count by category of post.'],
 
             'attendance.daily' => ['title' => 'Daily attendance', 'group' => 'Attendance', 'permission' => $attendance, 'filters' => ['date', 'department_id'], 'about' => 'Who came, when, and for how long on one day.'],
             'attendance.monthly' => ['title' => 'Monthly attendance summary', 'group' => 'Attendance', 'permission' => $attendance, 'filters' => ['month', 'department_id'], 'about' => 'Present, late, half-day, absent and leave days of every employee in a month.'],
@@ -68,7 +65,6 @@ class ReportService
             'payroll.tax' => ['title' => 'Tax report', 'group' => 'Payroll', 'permission' => $payroll, 'filters' => ['period'], 'about' => 'Income tax deducted from each employee in a month.'],
             'payroll.paid' => ['title' => 'Paid payroll', 'group' => 'Payroll', 'permission' => $payroll, 'filters' => ['period'], 'about' => 'Salaries that have been paid, with method and reference.'],
             'payroll.pending' => ['title' => 'Pending payroll', 'group' => 'Payroll', 'permission' => $payroll, 'filters' => ['period'], 'about' => 'Salaries that have not been paid yet.'],
-            'payroll.faculty' => ['title' => 'Faculty-wise payroll', 'group' => 'Payroll', 'permission' => $payroll, 'filters' => ['period'], 'about' => 'Salary totals of each faculty (and of the administrative offices) for a month.'],
         ];
     }
 
@@ -221,8 +217,6 @@ class ReportService
             'employees.active' => $this->employeeList($f, 'active'),
             'employees.department' => $this->headCount(Department::class, 'Department'),
             'employees.designation' => $this->headCount(Designation::class, 'Designation'),
-            'employees.faculty' => $this->employeesByFaculty(),
-            'employees.category' => $this->employeesByCategory(),
 
             'attendance.daily' => $this->attendanceDaily($f),
             'attendance.monthly' => $this->attendanceMonthly($f),
@@ -245,7 +239,6 @@ class ReportService
             'payroll.tax' => $this->payrollTax($f),
             'payroll.paid' => $this->payrollPaid($f),
             'payroll.pending' => $this->payrollPending($f),
-            'payroll.faculty' => $this->payrollFaculty($f),
         };
     }
 
@@ -281,47 +274,6 @@ class ReportService
         return $this->result(
             [$this->col('name', $label), $this->col('total', 'Total employees', 'number'), $this->col('active', 'Active', 'number'), $this->col('other', 'Not active', 'number')],
             $rows, $this->sum($rows, ['total', 'active', 'other'])
-        );
-    }
-
-    private function employeesByFaculty(): array
-    {
-        $rows = [];
-
-        $departments = Department::with('faculty')->withCount(['employees', 'employees as active_count' => fn ($q) => $q->where('status', 'active')])->get()
-            ->sortBy(fn ($d) => ($d->faculty?->name ?? '~') . '|' . $d->name);
-
-        foreach ($departments as $department) {
-            $rows[] = [
-                'faculty' => $department->faculty?->name ?? 'Administrative offices',
-                'department' => $department->name,
-                'total' => $department->employees_count,
-                'active' => $department->active_count,
-            ];
-        }
-
-        return $this->result(
-            [$this->col('faculty', 'Faculty'), $this->col('department', 'Department / office'), $this->col('total', 'Total employees', 'number'), $this->col('active', 'Active', 'number')],
-            $rows, $this->sum($rows, ['total', 'active'])
-        );
-    }
-
-    private function employeesByCategory(): array
-    {
-        $rows = [];
-
-        foreach (Designation::CATEGORIES as $key => $label) {
-            $employees = Employee::whereHas('designation', fn ($q) => $q->where('category', $key));
-            $rows[] = [
-                'category' => $label,
-                'total' => (clone $employees)->count(),
-                'active' => (clone $employees)->where('status', 'active')->count(),
-            ];
-        }
-
-        return $this->result(
-            [$this->col('category', 'Category'), $this->col('total', 'Total employees', 'number'), $this->col('active', 'Active', 'number')],
-            $rows, $this->sum($rows, ['total', 'active'])
         );
     }
 
@@ -681,28 +633,6 @@ class ReportService
         return $this->result($columns, $rows, $this->sum($rows, ['net']), ['Status of the month: ' . ucfirst($period->status)]);
     }
 
-    private function payrollFaculty(array $f): array
-    {
-        $columns = [
-            $this->col('faculty', 'Faculty'), $this->col('employees', 'Employees', 'number'), $this->col('gross', 'Gross', 'money'),
-            $this->col('tax', 'Tax', 'money'), $this->col('deductions', 'Total deductions', 'money'), $this->col('net', 'Net salary', 'money'),
-        ];
-
-        $period = $this->periodOrNull($f);
-        if (! $period) {
-            return $this->result($columns, [], null, ['No payroll has been processed yet.']);
-        }
-
-        $rows = $this->payrollsOf($period)
-            ->groupBy(fn ($p) => $p->employee->department?->faculty?->name ?? 'Administrative offices')
-            ->map(fn ($set, $name) => [
-                'faculty' => $name, 'employees' => $set->count(), 'gross' => round((float) $set->sum('gross_salary'), 2),
-                'tax' => round((float) $set->sum('tax'), 2), 'deductions' => round((float) $set->sum('total_deductions'), 2), 'net' => round((float) $set->sum('net_salary'), 2),
-            ])->sortBy('faculty')->values()->all();
-
-        return $this->result($columns, $rows, $this->sum($rows, ['employees', 'gross', 'tax', 'deductions', 'net']), ['Status: ' . ucfirst($period->status)]);
-    }
-
     // ------------------------------------------------------------------
     //  Helpers
     // ------------------------------------------------------------------
@@ -714,7 +644,7 @@ class ReportService
 
     private function payrollsOf(PayrollPeriod $period, array $with = [])
     {
-        return Payroll::with(array_merge(['employee.department.faculty'], $with))
+        return Payroll::with(array_merge(['employee.department'], $with))
             ->where('payroll_period_id', $period->id)->get()
             ->filter(fn ($p) => $p->employee)
             ->sortBy(fn ($p) => $p->employee->employee_code)->values();

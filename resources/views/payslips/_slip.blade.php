@@ -50,10 +50,6 @@
             <td class="label">Pay period</td><td>{{ $period->start_date->format('d M') }} &ndash; {{ $period->end_date->format('d M Y') }}</td>
         </tr>
         <tr>
-            <td class="label">Pay grade</td><td>{{ $e->payGrade ? 'Grade ' . $e->payGrade->grade_no : '-' }}</td>
-            <td class="label">PF account no.</td><td>{{ $e->pf_account_no ?: '-' }}</td>
-        </tr>
-        <tr>
             <td class="label">Bank</td><td>{{ $e->bank_name ?: '-' }}@if ($slip['account']) ({{ $slip['account'] }}) @endif</td>
             <td class="label">Basic salary</td><td>{{ $m($p->basic_salary) }}</td>
         </tr>
@@ -83,7 +79,7 @@
         </tbody>
     </table>
 
-    <table class="box section">
+    <table class="box section attendance">
         <thead>
             <tr><th>Working days</th><th>Present</th><th>Absent</th><th>Unpaid leave</th><th>Late arrivals</th><th>Income tax</th></tr>
         </thead>
@@ -102,7 +98,7 @@
     <table class="info section">
         <tr>
             <td class="label">Payment status</td>
-            <td><strong>{{ $payment ? ucfirst($payment->status) : 'Not paid yet' }}</strong></td>
+            <td><span class="status {{ $payment && $payment->status === 'paid' ? 'status-paid' : 'status-unpaid' }}">{{ $payment ? ucfirst($payment->status) : 'Not paid yet' }}</span></td>
             <td class="label">Payment date</td>
             <td>{{ $payment?->payment_date?->format('d M Y') ?? '-' }}</td>
         </tr>

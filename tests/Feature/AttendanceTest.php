@@ -29,6 +29,29 @@ class AttendanceTest extends TestCase
         $this->assertMoney(8.0, Attendance::where('employee_id', $b->id)->value('working_hours'));
     }
 
+    public function test_daily_sheet_can_search_employee_by_name_or_id(): void
+    {
+        $target = $this->makeEmployee([
+            'first_name' => 'Farhana',
+            'last_name' => 'Akter',
+            'employee_code' => 'EMP-2042',
+        ]);
+        $this->makeEmployee(['first_name' => 'Shakib', 'last_name' => 'Chowdhury']);
+
+        $hr = $this->userWithRole('hr_manager');
+        $this->actingAs($hr)
+            ->get(route('attendance.index', ['date' => today()->toDateString(), 'q' => 'Farhana Akter']))
+            ->assertOk()
+            ->assertSee('Farhana Akter')
+            ->assertDontSee('Shakib Chowdhury');
+
+        $this->actingAs($hr)
+            ->get(route('attendance.index', ['date' => today()->toDateString(), 'q' => $target->employee_code]))
+            ->assertOk()
+            ->assertSee('Farhana Akter')
+            ->assertDontSee('Shakib Chowdhury');
+    }
+
     /** TC-ATT-002: Saving the same day twice updates the record and never duplicates it */
     public function test_saving_twice_does_not_duplicate(): void
     {

@@ -7,22 +7,15 @@ use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Employee;
 use App\Models\EmployeeSalaryComponent;
-use App\Models\Faculty;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
 use App\Models\PayrollPeriod;
-use App\Models\PayGrade;
-use App\Models\Role;
 use App\Models\SalaryComponent;
 use App\Models\Setting;
 use App\Models\User;
 use Carbon\Carbon;
-use Database\Seeders\RolePermissionSeeder;
-use Database\Seeders\SalaryComponentSeeder;
-use Database\Seeders\SettingSeeder;
-use Database\Seeders\UniversitySeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -39,7 +32,7 @@ class SeedDemoDataset extends Command
         'payroll_items' => 300,
     ];
 
-    protected $signature = 'pms:seed-demo-dataset {profile : padmatech or hstu}';
+    protected $signature = 'pms:seed-demo-dataset {profile : padmatech}';
 
     protected $description = 'Add a repeatable 5,000-row synthetic payroll dataset';
 
@@ -47,13 +40,13 @@ class SeedDemoDataset extends Command
     {
         $profile = $this->argument('profile');
 
-        if (! in_array($profile, ['padmatech', 'hstu'], true)) {
-            $this->error('Choose either the padmatech or hstu profile.');
+        if ($profile !== 'padmatech') {
+            $this->error('Choose the padmatech profile.');
 
             return self::FAILURE;
         }
 
-        $expectedDatabase = $profile === 'hstu' ? 'payroll_pms_hstu' : 'payroll_pms';
+        $expectedDatabase = 'payroll_pms';
         $actualDatabase = DB::connection()->getDatabaseName();
 
         if ($actualDatabase !== $expectedDatabase) {
@@ -69,18 +62,14 @@ class SeedDemoDataset extends Command
         }
 
         try {
-            if ($profile === 'hstu') {
-                $this->prepareUniversityDatabase();
-            }
-
-            $this->seedDataset($profile);
+            $this->seedDataset();
         } catch (RuntimeException $exception) {
             $this->error($exception->getMessage());
 
             return self::FAILURE;
         }
 
-        $counts = $this->datasetCounts($profile);
+        $counts = $this->datasetCounts();
         $total = array_sum($counts);
 
         foreach ($counts as $table => $count) {
@@ -95,97 +84,49 @@ class SeedDemoDataset extends Command
 
         $this->info("Verified {$total} synthetic dataset rows in {$expectedDatabase}.");
 
-        if ($profile === 'hstu') {
-            $this->warn('HSTU pay grades and allowance rates are sample data; verify them against official university rules.');
-            $this->line('HSTU demo administrator: admin@hstu.example / Password@123');
-        }
-
         return self::SUCCESS;
     }
 
-    private function prepareUniversityDatabase(): void
-    {
-        if (! Schema::hasTable('faculties')) {
-            throw new RuntimeException('HSTU schema is missing. Run DB_DATABASE=payroll_pms_hstu php artisan migrate --force first.');
-        }
-
-        if (! Faculty::exists()) {
-            if (Department::exists() || Employee::exists() || User::exists()) {
-                throw new RuntimeException('The HSTU database has existing records but no faculties. Set up its university structure manually before seeding.');
-            }
-
-            app(RolePermissionSeeder::class)->run();
-            app(SettingSeeder::class)->run();
-            app(SalaryComponentSeeder::class)->run();
-            app(UniversitySeeder::class)->run();
-        }
-
-        if (! Role::where('name', 'admin')->exists()) {
-            app(RolePermissionSeeder::class)->run();
-        }
-
-        if (! SalaryComponent::where('code', 'HRA')->exists() || ! LeaveType::where('status', 'active')->exists()) {
-            throw new RuntimeException('HSTU setup is incomplete. Check roles, leave types and salary components before seeding.');
-        }
-
-        User::firstOrCreate(
-            ['email' => 'admin@hstu.example'],
-            [
-                'name' => 'HSTU Demo Administrator',
-                'password' => 'Password@123',
-                'role_id' => Role::where('name', 'admin')->value('id'),
-                'status' => 'active',
-            ]
-        );
-    }
-
-    private function seedDataset(string $profile): void
+    private function seedDataset(): void
     {
         $departments = Department::where('status', 'active')->orderBy('id')->pluck('id')->all();
         $designations = Designation::where('status', 'active')->orderBy('id')->pluck('id')->all();
         $component = SalaryComponent::where('code', 'HRA')->where('status', 'active')->first();
         $leaveType = LeaveType::where('status', 'active')->orderBy('id')->first();
         $admin = User::where('status', 'active')->whereHas('role', fn ($query) => $query->where('name', 'admin'))->orderBy('id')->first();
-        $grades = $profile === 'hstu' ? PayGrade::where('status', 'active')->orderBy('grade_no')->get() : collect();
-
-        if ($departments === [] || $designations === [] || ! $component || ! $leaveType || ! $admin || ($profile === 'hstu' && $grades->isEmpty())) {
-            throw new RuntimeException('The database needs an active administrator, departments, designations, leave types, salary components and (for HSTU) pay grades.');
+        if ($departments === [] || $designations === [] || ! $component || ! $leaveType || ! $admin) {
+            throw new RuntimeException('The database needs an active administrator, departments, designations, leave types and salary components.');
         }
 
         $employees = [];
 
-        DB::transaction(function () use ($profile, $departments, $designations, $component, $leaveType, $admin, $grades, &$employees) {
+        DB::transaction(function () use ($departments, $designations, $component, $leaveType, $admin, &$employees) {
             for ($i = 1; $i <= self::RECORD_COUNTS['employees']; $i++) {
-                $grade = $profile === 'hstu' ? $grades[($i - 1) % $grades->count()] : null;
-                $code = $this->employeeCode($profile, $i);
+                $code = $this->employeeCode($i);
                 $joiningDate = Carbon::create(2018 + ($i % 6), (($i - 1) % 12) + 1, (($i - 1) % 27) + 1);
-                $basicSalary = $grade?->min_basic ?? (25000 + (($i - 1) % 10) * 1500);
+                $basicSalary = 25000 + (($i - 1) % 10) * 1500;
 
                 $employee = Employee::updateOrCreate(
                     ['employee_code' => $code],
                     [
                         'first_name' => $this->firstName($i),
                         'last_name' => $this->lastName($i),
-                        'email' => $this->employeeEmail($profile, $i),
+                        'email' => $this->employeeEmail($i),
                         'phone' => '01' . [3, 5, 6, 7, 8, 9][$i % 6] . sprintf('%08d', 40000000 + $i),
-                        'address' => $profile === 'hstu' ? 'Demo address, Dinajpur, Bangladesh' : 'Demo address, Dhaka, Bangladesh',
+                        'address' => 'Demo address, Dhaka, Bangladesh',
                         'gender' => $i % 2 === 0 ? 'female' : 'male',
                         'date_of_birth' => Carbon::create(1970 + ($i % 25), (($i - 1) % 12) + 1, (($i - 1) % 27) + 1),
-                        'nid' => sprintf('%013d', ($profile === 'hstu' ? 9000000000000 : 8000000000000) + $i),
-                        'tin' => sprintf('%012d', ($profile === 'hstu' ? 500000000000 : 600000000000) + $i),
+                        'nid' => sprintf('%013d', 8000000000000 + $i),
                         'emergency_contact_name' => 'Demo family contact ' . $i,
                         'emergency_contact_phone' => '018' . sprintf('%08d', 50000000 + $i),
                         'department_id' => $departments[($i - 1) % count($departments)],
                         'designation_id' => $designations[($i - 1) % count($designations)],
-                        'pay_grade_id' => $grade?->id,
                         'employment_type' => $i % 5 === 0 ? 'contract' : 'permanent',
                         'joining_date' => $joiningDate->toDateString(),
                         'basic_salary' => $basicSalary,
-                        'last_increment_on' => null,
                         'bank_name' => ['Sonali Bank PLC', 'Agrani Bank PLC', 'Janata Bank PLC'][$i % 3],
                         'bank_account_number' => sprintf('%013d', 7000000000000 + $i),
-                        'bank_branch' => $profile === 'hstu' ? 'Dinajpur' : 'Dhaka',
-                        'pf_account_no' => $i % 5 === 0 ? null : sprintf('DEMO-PF-%04d', $i),
+                        'bank_branch' => 'Dhaka',
                         'status' => 'active',
                     ]
                 );
@@ -202,14 +143,14 @@ class SeedDemoDataset extends Command
                 );
             }
 
-            $this->seedAttendance($profile, $employees);
-            $this->seedLeaveRequests($profile, $employees, $leaveType, $admin);
+            $this->seedAttendance($employees);
+            $this->seedLeaveRequests($employees, $leaveType, $admin);
             $this->seedPayroll($employees, $component, $admin);
         }, 3);
     }
 
     /** @param list<Employee> $employees */
-    private function seedAttendance(string $profile, array $employees): void
+    private function seedAttendance(array $employees): void
     {
         $weeklyOff = array_map('intval', array_filter(explode(',', (string) Setting::get('weekly_off_days', '5')), 'strlen'));
         $rows = [];
@@ -256,12 +197,12 @@ class SeedDemoDataset extends Command
     }
 
     /** @param list<Employee> $employees */
-    private function seedLeaveRequests(string $profile, array $employees, LeaveType $leaveType, User $admin): void
+    private function seedLeaveRequests(array $employees, LeaveType $leaveType, User $admin): void
     {
         foreach ($employees as $i => $employee) {
             foreach ([0, 1] as $requestIndex) {
                 $start = Carbon::create(2025, $requestIndex === 0 ? 1 : 7, 1)->addDays($i);
-                $reason = sprintf('Synthetic demo dataset:%s:%04d:%d', $profile, $i + 1, $requestIndex + 1);
+                $reason = sprintf('Synthetic demo dataset:padmatech:%04d:%d', $i + 1, $requestIndex + 1);
                 $approved = ($i + $requestIndex) % 3 !== 0;
 
                 LeaveRequest::updateOrCreate(
@@ -339,9 +280,9 @@ class SeedDemoDataset extends Command
     }
 
     /** @return array<string, int> */
-    private function datasetCounts(string $profile): array
+    private function datasetCounts(): array
     {
-        $codes = array_map(fn ($i) => $this->employeeCode($profile, $i), range(1, self::RECORD_COUNTS['employees']));
+        $codes = array_map(fn ($i) => $this->employeeCode($i), range(1, self::RECORD_COUNTS['employees']));
         $employeeIds = Employee::whereIn('employee_code', $codes)->pluck('id');
         $payrollIds = Payroll::whereIn('employee_id', $employeeIds)->whereHas('period', fn ($query) => $query->where('year', 2024)->whereIn('month', [11, 12]))->pluck('id');
         $componentId = SalaryComponent::where('code', 'HRA')->value('id');
@@ -349,21 +290,21 @@ class SeedDemoDataset extends Command
         return [
             'employees' => Employee::whereIn('employee_code', $codes)->count(),
             'attendances' => Attendance::whereIn('employee_id', $employeeIds)->where('remarks', 'Synthetic demo dataset')->count(),
-            'leave_requests' => LeaveRequest::whereIn('employee_id', $employeeIds)->where('reason', 'like', "Synthetic demo dataset:{$profile}:%")->count(),
+            'leave_requests' => LeaveRequest::whereIn('employee_id', $employeeIds)->where('reason', 'like', 'Synthetic demo dataset:padmatech:%')->count(),
             'employee_salary_components' => EmployeeSalaryComponent::whereIn('employee_id', $employeeIds)->where('salary_component_id', $componentId)->count(),
             'payrolls' => Payroll::whereIn('id', $payrollIds)->count(),
             'payroll_items' => PayrollItem::whereIn('payroll_id', $payrollIds)->where('name', 'Demo housing allowance')->count(),
         ];
     }
 
-    private function employeeCode(string $profile, int $i): string
+    private function employeeCode(int $i): string
     {
-        return sprintf($profile === 'hstu' ? 'HSTU-D%04d' : 'PD-D%04d', $i);
+        return sprintf('PD-D%04d', $i);
     }
 
-    private function employeeEmail(string $profile, int $i): string
+    private function employeeEmail(int $i): string
     {
-        return sprintf($profile === 'hstu' ? 'hstu.demo.%04d@example.test' : 'padma.demo.%04d@example.test', $i);
+        return sprintf('padma.demo.%04d@example.test', $i);
     }
 
     private function firstName(int $i): string

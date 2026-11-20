@@ -18,28 +18,6 @@
                             @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label for="type" class="form-label">Kind of unit <span class="text-danger">*</span></label>
-                                <select id="type" name="type" class="form-select @error('type') is-invalid @enderror" required>
-                                    @foreach (\App\Models\Department::TYPES as $key => $label)
-                                        <option value="{{ $key }}" @selected(old('type', $department->type) === $key)>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                                @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label for="faculty_id" class="form-label">Faculty</label>
-                                <select id="faculty_id" name="faculty_id" class="form-select @error('faculty_id') is-invalid @enderror">
-                                    <option value="">None (administrative office)</option>
-                                    @foreach ($faculties as $id => $name)
-                                        <option value="{{ $id }}" @selected((string) old('faculty_id', $department->faculty_id) === (string) $id)>{{ $name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('faculty_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                        </div>
-
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <textarea id="description" name="description" rows="3" maxlength="500"

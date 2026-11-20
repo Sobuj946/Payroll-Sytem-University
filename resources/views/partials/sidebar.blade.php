@@ -9,7 +9,6 @@
         ],
         'People' => [
             ['Employees', 'bi-people', 'employees.index', ['employees.view'], 'employees.*'],
-            ['Faculties', 'bi-buildings', 'faculties.index', ['departments.view'], 'faculties.*'],
             ['Departments', 'bi-diagram-3', 'departments.index', ['departments.view'], 'departments.*'],
             ['Designations', 'bi-award', 'designations.index', ['designations.view'], 'designations.*'],
         ],

@@ -36,11 +36,11 @@
                             <div class="row g-3 mb-3">
                                 <div class="col-md-4">
                                     <label for="company_short_name" class="form-label">Short name</label>
-                                    <input type="text" id="company_short_name" name="company_short_name" value="{{ old('company_short_name', $s['company_short_name']) }}" maxlength="20" class="form-control" placeholder="e.g. HSTU">
+                                    <input type="text" id="company_short_name" name="company_short_name" value="{{ old('company_short_name', $s['company_short_name']) }}" maxlength="20" class="form-control" placeholder="e.g. PT">
                                 </div>
                                 <div class="col-md-8">
                                     <label for="system_title" class="form-label">Name of this system</label>
-                                    <input type="text" id="system_title" name="system_title" value="{{ old('system_title', $s['system_title']) }}" maxlength="80" class="form-control" placeholder="e.g. HSTU Payroll Management System">
+                                    <input type="text" id="system_title" name="system_title" value="{{ old('system_title', $s['system_title']) }}" maxlength="80" class="form-control" placeholder="e.g. Padma Tech Payroll System">
                                 </div>
                             </div>
                             <div class="mb-3">

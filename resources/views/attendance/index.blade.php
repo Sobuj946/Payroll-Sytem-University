@@ -12,7 +12,7 @@
                     <label for="date" class="form-label small text-muted mb-1">Date</label>
                     <input type="date" id="date" name="date" value="{{ $date->toDateString() }}" max="{{ today()->toDateString() }}" class="form-control">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="department_id" class="form-label small text-muted mb-1">Department</label>
                     <select id="department_id" name="department_id" class="form-select">
                         <option value="">All departments</option>
@@ -20,6 +20,11 @@
                             <option value="{{ $department->id }}" @selected((string) request('department_id') === (string) $department->id)>{{ $department->name }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="q" class="form-label small text-muted mb-1">Find employee</label>
+                    <input type="search" id="q" name="q" value="{{ request('q') }}" class="form-control"
+                           placeholder="Name or employee ID">
                 </div>
                 <div class="col-md-auto">
                     <button type="submit" class="btn btn-primary">Show</button>
@@ -40,6 +45,7 @@
         @csrf
         <input type="hidden" name="date" value="{{ $date->toDateString() }}">
         <input type="hidden" name="department_id" value="{{ request('department_id') }}">
+        <input type="hidden" name="q" value="{{ request('q') }}">
 
         <div class="card">
             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -105,7 +111,7 @@
                                 @endif
                             </tr>
                         @empty
-                            <tr><td colspan="7"><div class="empty-state"><i class="bi bi-people"></i>No active employees found for this date.</div></td></tr>
+                            <tr><td colspan="7"><div class="empty-state"><i class="bi bi-people"></i>{{ request()->filled('q') ? 'No employees match your search.' : 'No active employees found for this date.' }}</div></td></tr>
                         @endforelse
                     </tbody>
                 </table>

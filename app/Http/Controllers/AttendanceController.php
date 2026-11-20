@@ -31,6 +31,13 @@ class AttendanceController extends Controller
             ->where('status', 'active')
             ->whereDate('joining_date', '<=', $date->toDateString())
             ->when($request->filled('department_id'), fn ($q) => $q->where('department_id', $request->department_id))
+            ->when($request->filled('q'), function ($q) use ($request) {
+                $term = '%' . trim((string) $request->query('q')) . '%';
+                $q->where(function ($search) use ($term) {
+                    $search->whereRaw("CONCAT(first_name, ' ', last_name) like ?", [$term])
+                        ->orWhere('employee_code', 'like', $term);
+                });
+            })
             ->orderBy('employee_code')
             ->get();
 
@@ -128,7 +135,11 @@ class AttendanceController extends Controller
         AuditService::log('saved', 'attendance', "Attendance for {$date->format('d M Y')} saved for {$saved} employees");
 
         return redirect()
-            ->route('attendance.index', ['date' => $date->toDateString(), 'department_id' => $request->input('department_id')])
+            ->route('attendance.index', [
+                'date' => $date->toDateString(),
+                'department_id' => $request->input('department_id'),
+                'q' => $request->input('q'),
+            ])
             ->with('success', "Attendance for {$date->format('d M Y')} has been saved ({$saved} employees).");
     }
 

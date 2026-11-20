@@ -45,8 +45,7 @@ On Linux use `sudo mysql` instead of `mysql -u root -p`. With XAMPP the first co
 php artisan pms:install
 ```
 It asks for the administrator's name, email and password, and the organization's name.
-**For the university (HSTU):** run `php artisan pms:install --university`. It loads the university name and title, the faculties and departments, the posts (teachers, officers, staff), the pay grades, university leave types, allowances and deductions, and the holidays. All of these are **samples to be checked** against the university's own rules and then corrected inside the system.
-To try the system with demonstration employees, add `--demo`: `php artisan pms:install --demo` (the demo accounts all use the password `Password@123`, so never use `--demo` for real data). With `--university --demo` the demonstration people are teachers, officers and staff of the university.
+To try the system with demonstration employees, add `--demo`: `php artisan pms:install --demo` (the demo accounts all use the password `Password@123`, so never use `--demo` for real data).
 
 **5. Download the page design files once** (this is what makes it work without internet)
 ```

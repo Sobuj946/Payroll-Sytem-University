@@ -58,7 +58,7 @@ class SettingsController extends Controller
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         ], [
             'company_name.required' => 'Please enter the organization name.',
-            'employee_code_prefix.regex' => 'The prefix must be 2 to 10 capital letters or digits, for example HSTU.',
+            'employee_code_prefix.regex' => 'The prefix must be 2 to 10 capital letters or digits, for example PT.',
             'company_email.email' => 'Please enter a valid email address.',
             'logo.image' => 'The logo must be an image file.',
             'logo.mimes' => 'The logo must be a PNG or JPG file.',

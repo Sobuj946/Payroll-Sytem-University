@@ -7,9 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Designation extends Model
 {
-    public const CATEGORIES = ['teacher' => 'Teacher', 'officer' => 'Officer', 'staff' => 'Staff'];
-
-    protected $fillable = ['name', 'category', 'description', 'status'];
+    protected $fillable = ['name', 'description', 'status'];
 
     public function employees(): HasMany
     {

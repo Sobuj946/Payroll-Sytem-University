@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
 use App\Models\EmployeeSalaryComponent;
+use App\Models\PayrollAdjustment;
 use App\Models\SalaryComponent;
 use Tests\TestCase;
 
@@ -143,5 +145,30 @@ class SalaryTest extends TestCase
 
         $this->actingAs($admin)->from('/salary/components/create')->post(route('salary.components.store'), $payload)->assertSessionHasErrors('code');
         $this->actingAs($admin)->from('/salary/components/create')->post(route('salary.components.store'), array_merge($payload, ['code' => 'bad code']))->assertSessionHasErrors('code');
+    }
+
+    public function test_bulk_adjustment_targets_a_department_without_adding_duplicates(): void
+    {
+        $targetDepartment = Department::firstOrFail();
+        $otherDepartment = Department::create(['name' => 'Operations', 'status' => 'active']);
+        $target = $this->makeEmployee(['department_id' => $targetDepartment->id, 'basic_salary' => 60000]);
+        $outside = $this->makeEmployee(['department_id' => $otherDepartment->id, 'basic_salary' => 40000]);
+        $officer = $this->userWithRole('payroll_officer');
+        $period = $this->makePeriod($officer);
+        $payload = [
+            'payroll_period_id' => $period->id,
+            'salary_component_id' => $this->componentId('BONUS'),
+            'basis' => 'percent_of_basic',
+            'value' => 10,
+            'department_id' => $targetDepartment->id,
+            'note' => 'Quarterly bonus',
+        ];
+
+        $this->actingAs($officer)->post(route('salary.adjustments.bulk'), $payload)->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('payroll_adjustments', ['employee_id' => $target->id, 'amount' => 6000]);
+        $this->assertDatabaseMissing('payroll_adjustments', ['employee_id' => $outside->id]);
+
+        $this->actingAs($officer)->post(route('salary.adjustments.bulk'), $payload)->assertSessionHas('error');
+        $this->assertSame(1, PayrollAdjustment::where('payroll_period_id', $period->id)->count());
     }
 }

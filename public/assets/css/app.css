@@ -37,6 +37,30 @@ body { background: var(--pms-bg); font-size: 0.925rem; }
     border-color: color-mix(in srgb, var(--pms-accent) 60%, #fff);
     box-shadow: 0 0 0 0.25rem rgba(var(--pms-accent-rgb), 0.25);
 }
+.password-toggle-wrap {
+    position: relative;
+}
+.password-toggle-wrap .form-control {
+    padding-right: 2.75rem;
+}
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    line-height: 2rem;
+    text-align: center;
+}
+.password-toggle:hover,
+.password-toggle:focus-visible {
+    color: var(--pms-accent);
+}
 .form-check-input:checked { background-color: var(--pms-accent); border-color: var(--pms-accent); }
 .nav-pills { --bs-nav-pills-link-active-bg: var(--pms-accent); }
 .nav-tabs .nav-link.active { color: var(--pms-accent); }
